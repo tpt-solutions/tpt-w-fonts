@@ -1,0 +1,7 @@
+Modern Font Manager for Designers & Devs (tpt-fonts)
+The Problem: OS font settings are archaic. Installing hundreds of fonts slows down app launch times, and there’s no easy way to "temporarily" load a font for a single project.
+The TPT Solution: A system-wide font manager with "session-based" activation, duplicate detection, and variable font previewing.
+
+Compatible on Windows, Linux and Archon. https://github.com/tpt-solutions/tpt-archon
+
+🐧 Linux & Archon Compatibility: Manages Fontconfig caches and user/system directories natively on Linux. On Archon, fonts are loaded into the unified page cache as memory-mapped, read-only shared objects. tpt-fonts allows apps to dynamically bind to specific font capabilities without duplicating font data in RAM, keeping the OS incredibly lightweight even with 10,000 fonts installed.
