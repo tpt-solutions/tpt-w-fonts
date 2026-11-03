@@ -41,7 +41,7 @@ Decisions locked in for this roadmap:
 | 7 | CLI | 🟡 Implemented; SVG preview only, uninstall not run from the CLI |
 | 8 | Tauri GUI: Main Application | 🟡 Library, detail, preview, duplicates and settings run; grouping, thumbnails and scan directories open |
 | 9 | Archon Support (Design Only) | 🟡 Design draft written; open questions await the tpt-archon team |
-| 10 | Performance & Polish | ❌ Not Started |
+| 10 | Performance & Polish | 🟡 Scale measured on 10,000 fonts; polish not started |
 | 11 | Testing & QA | ❌ Not Started |
 | 12 | Release v1 | ❌ Not Started |
 
@@ -133,12 +133,12 @@ Decisions locked in for this roadmap:
 - [x] Post-v1 `archon` Cargo feature flag plan — written as section 5 of the design doc; no code is added in v1
 
 ## Phase 10 — Performance & Polish
-- [ ] Cold-start/catalog-load optimization targeting the spec's 10,000-installed-fonts scenario
-- [ ] Memory profiling (catalog index + tray resident process + WebView)
-- [ ] Light/dark theme support, accessibility pass (keyboard navigation, screen reader labels)
-- [ ] App icon, branding assets (TPT Solutions)
-- [ ] First-run onboarding (initial scan progress, explain session vs. permanent install)
-- [ ] Crash reporting/local error logging (opt-in only)
+- [ ] Cold-start/catalog-load optimization — measured, not optimised yet. On 10,000 fonts (27 KB each, release build): cold scan 1.48 s, cache load 31 ms, warm refresh 340 ms, row build 9 ms. Run `cargo run --release -p tpt-fonts-core --example scale -- <dir>`. Real fonts are larger, so cold scans will take longer
+- [ ] Memory profiling (catalog index + tray resident process + WebView) — not measured yet
+- [ ] Light/dark theme support, accessibility pass — theme choice (system, light, dark) is in; a keyboard and screen-reader audit has not been done
+- [ ] App icon, branding assets — placeholder icon in place
+- [ ] First-run onboarding — not started
+- [ ] Crash reporting/local error logging (opt-in only) — not started
 
 ## Phase 11 — Testing & QA
 - [ ] Unit tests: parsing engine, duplicate detection, session activation logic (mocked per-platform backends)
