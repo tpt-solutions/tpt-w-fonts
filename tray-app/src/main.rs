@@ -4,6 +4,9 @@
 //! Resident tray process. It owns session activations, serves requests from the GUI and CLI,
 //! and cleans up after a previous crash on startup.
 
+// Hide the console window on Windows release builds; debug builds keep it for logs.
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
 mod ipc_server;
 mod tray;
 
