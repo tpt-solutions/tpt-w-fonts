@@ -16,6 +16,7 @@ mod format;
 mod fvar;
 mod ipc;
 mod ipc_client;
+mod library;
 mod linux;
 mod model;
 mod parse;
@@ -42,6 +43,7 @@ pub use ipc::{
     Request, Response, SOCKET_NAME, decode_line, encode_line, handle_request, is_activatable,
 };
 pub use ipc_client::send as send_request;
+pub use library::{FontRow, FontState, build_rows};
 pub use linux::{CommandOutput, CommandRunner, FontconfigBackend, LinuxPaths, SystemRunner};
 pub use model::{
     EmbeddingRights, FontFace, FontFile, FontFormat, FontSource, NamedInstance, ScanRoot,
