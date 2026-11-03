@@ -32,3 +32,15 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Windows build artifacts
+*.msi
+*.msix
+*.appx
+*.msm
+*.wixobj
+*.wixpdb
+*.exe.manifest
+*.ilk
+*.exp
+*.lib
