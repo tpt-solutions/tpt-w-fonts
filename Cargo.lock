@@ -4441,6 +4441,7 @@ dependencies = [
 name = "tpt-fonts-gui"
 version = "0.1.0"
 dependencies = [
+ "serde",
  "tauri",
  "tauri-build",
  "tpt-fonts-core",
