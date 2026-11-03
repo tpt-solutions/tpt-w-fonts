@@ -37,7 +37,7 @@ pub enum FontError {
     #[error("{} is outside the user font directory and cannot be changed", path.display())]
     OutsideFontDirectory { path: PathBuf },
 
-    #[error("catalog serialisation failed: {0}")]
+    #[error("serialisation failed: {0}")]
     Serialise(#[from] serde_json::Error),
 }
 

@@ -72,7 +72,17 @@ fn store_in(dir: &Path) -> SessionStore {
 }
 
 fn font(name: &str) -> PathBuf {
-    PathBuf::from(format!(r"C:\fonts\{name}.ttf"))
+    font_file(name)
+}
+
+/// A real, if empty, `.ttf` path under the system temp directory. The session only checks that
+/// the file exists and has a font extension; the backend is a fake, so the bytes do not matter.
+fn font_file(name: &str) -> PathBuf {
+    let dir = std::env::temp_dir().join("tpt-fonts-session-tests");
+    std::fs::create_dir_all(&dir).expect("temp subdir");
+    let path = dir.join(format!("{name}.ttf"));
+    std::fs::write(&path, b"placeholder").expect("write placeholder");
+    path
 }
 
 #[test]

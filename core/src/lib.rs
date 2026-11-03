@@ -7,12 +7,14 @@
 //! catalog and the filesystem watcher. Phase 2 adds duplicate detection and safe resolution,
 //! and Phase 3 adds the live preview model for variable fonts.
 
+mod autostart;
 mod backend;
 mod catalog;
 mod duplicates;
 mod error;
 mod format;
 mod fvar;
+mod ipc;
 mod linux;
 mod model;
 mod parse;
@@ -23,6 +25,9 @@ mod watch;
 #[cfg(windows)]
 mod win32;
 
+pub use autostart::{
+    AUTOSTART_NAME, autostart_enabled, desktop_entry, set_autostart, write_desktop_entry,
+};
 pub use backend::{FontBackend, InstalledFont};
 pub use catalog::{Catalog, RefreshReport};
 pub use duplicates::{
@@ -30,13 +35,16 @@ pub use duplicates::{
 };
 pub use error::{FontError, Result};
 pub use format::{detect_format, is_font_extension};
+pub use ipc::{
+    Request, Response, SOCKET_NAME, decode_line, encode_line, handle_request, is_activatable,
+};
 pub use linux::{CommandOutput, CommandRunner, FontconfigBackend, LinuxPaths, SystemRunner};
 pub use model::{
     EmbeddingRights, FontFace, FontFile, FontFormat, FontSource, NamedInstance, ScanRoot,
     VariationAxis,
 };
 pub use parse::{parse_faces, read_font_file};
-pub use platform::{default_scan_roots, process_is_running};
+pub use platform::{app_state_dir, default_scan_roots, process_is_running, user_config_dir};
 pub use preview::{
     AxisValue, Background, DEFAULT_SAMPLE_TEXT, PreviewState, SavedInstance, WATERFALL_SIZES,
 };

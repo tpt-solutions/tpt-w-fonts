@@ -15,6 +15,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::backend::FontBackend;
 use crate::error::{FontError, Result};
+use crate::format::is_font_extension;
 use crate::platform::process_is_running;
 
 /// Where an activation request came from. Shown in the UI and kept for diagnostics.
@@ -161,6 +162,12 @@ impl<B: FontBackend> SessionManager<B> {
     pub fn activate(&mut self, path: &Path, source: ActivationSource) -> Result<()> {
         if self.registry.contains(path) {
             return Ok(());
+        }
+        if !path.is_file() || !is_font_extension(path) {
+            return Err(FontError::Backend {
+                path: path.to_path_buf(),
+                reason: "not an existing font file".into(),
+            });
         }
         // Activate first: if the OS refuses, the state must not claim the font is active.
         self.backend.activate_session(&[path])?;

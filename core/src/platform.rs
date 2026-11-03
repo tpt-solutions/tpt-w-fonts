@@ -88,3 +88,28 @@ pub fn process_is_running(pid: u32) -> bool {
 pub fn process_is_running(pid: u32) -> bool {
     std::path::Path::new("/proc").join(pid.to_string()).exists()
 }
+
+/// The XDG configuration directory (`$XDG_CONFIG_HOME`, falling back to `~/.config`).
+/// Only Linux uses it; Windows autostart goes through the registry.
+pub fn user_config_dir() -> Option<PathBuf> {
+    xdg_or_home("XDG_CONFIG_HOME", ".config")
+}
+
+/// Per-user directory for tpt-fonts state such as the session file.
+/// Windows: `%LOCALAPPDATA%\tpt-fonts`. Linux: `$XDG_STATE_HOME/tpt-fonts`.
+pub fn app_state_dir() -> Option<PathBuf> {
+    #[cfg(windows)]
+    {
+        env::var_os("LOCALAPPDATA").map(|local| PathBuf::from(local).join("tpt-fonts"))
+    }
+    #[cfg(not(windows))]
+    {
+        xdg_or_home("XDG_STATE_HOME", ".local/state").map(|dir| dir.join("tpt-fonts"))
+    }
+}
+
+fn xdg_or_home(var: &str, fallback: &str) -> Option<PathBuf> {
+    env::var_os(var)
+        .map(PathBuf::from)
+        .or_else(|| env::var_os("HOME").map(|home| PathBuf::from(home).join(fallback)))
+}
