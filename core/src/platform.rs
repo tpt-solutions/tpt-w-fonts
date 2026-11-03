@@ -61,3 +61,30 @@ fn candidate_roots() -> Vec<ScanRoot> {
     }
     roots
 }
+
+/// Whether a process with this ID is still running. Used to detect a crashed tray process.
+#[cfg(windows)]
+pub fn process_is_running(pid: u32) -> bool {
+    use windows_sys::Win32::Foundation::{CloseHandle, HANDLE, STILL_ACTIVE};
+    use windows_sys::Win32::System::Threading::{
+        GetExitCodeProcess, OpenProcess, PROCESS_QUERY_LIMITED_INFORMATION,
+    };
+    // SAFETY: the handle is checked for null and closed before returning; the exit code
+    // pointer refers to a local that lives for the call.
+    unsafe {
+        let handle: HANDLE = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, 0, pid);
+        if handle.is_null() {
+            return false;
+        }
+        let mut code: u32 = 0;
+        let ok = GetExitCodeProcess(handle, &mut code) != 0;
+        CloseHandle(handle);
+        ok && code == STILL_ACTIVE as u32
+    }
+}
+
+/// Whether a process with this ID is still running. Used to detect a crashed tray process.
+#[cfg(not(windows))]
+pub fn process_is_running(pid: u32) -> bool {
+    std::path::Path::new("/proc").join(pid.to_string()).exists()
+}

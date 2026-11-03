@@ -18,6 +18,7 @@ mod model;
 mod parse;
 mod platform;
 mod preview;
+mod session;
 mod watch;
 #[cfg(windows)]
 mod win32;
@@ -35,9 +36,13 @@ pub use model::{
     VariationAxis,
 };
 pub use parse::{parse_faces, read_font_file};
-pub use platform::default_scan_roots;
+pub use platform::{default_scan_roots, process_is_running};
 pub use preview::{
     AxisValue, Background, DEFAULT_SAMPLE_TEXT, PreviewState, SavedInstance, WATERFALL_SIZES,
+};
+pub use session::{
+    ActivationSource, ActiveFont, Recovery, SessionManager, SessionRegistry, SessionStore,
+    recover_orphans, recover_orphans_with,
 };
 pub use watch::{FontChange, FontWatcher};
 #[cfg(windows)]
