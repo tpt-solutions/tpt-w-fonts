@@ -1,0 +1,171 @@
+/* SPDX-License-Identifier: MIT OR Apache-2.0 */
+/* Copyright (c) 2026 TPT Solutions */
+
+:root {
+  --bg: #f7f7f5;
+  --fg: #1d1d1b;
+  --muted: #6b6b66;
+  --panel: #ffffff;
+  --accent: #1f3a5c;
+  --error: #9b1c1c;
+  --border: #d9d9d4;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #161716;
+    --fg: #ecece8;
+    --muted: #a0a09a;
+    --panel: #1f201f;
+    --accent: #8fb4e3;
+    --error: #f2a5a5;
+    --border: #3a3b39;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #161716;
+  --fg: #ecece8;
+  --muted: #a0a09a;
+  --panel: #1f201f;
+  --accent: #8fb4e3;
+  --error: #f2a5a5;
+  --border: #3a3b39;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: system-ui, sans-serif;
+}
+
+#app {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.open-form,
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 8px 0;
+}
+
+.open-form input[type="text"] {
+  flex: 1 1 320px;
+}
+
+input,
+select,
+button {
+  font: inherit;
+  color: inherit;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px 10px;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled,
+select:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.error {
+  color: var(--error);
+}
+
+.meta,
+.value {
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.specimen {
+  min-height: 1.5em;
+  padding: 24px;
+  border-radius: 6px;
+  overflow-wrap: anywhere;
+  transition: background-color 150ms;
+}
+
+.specimen.light,
+.waterfall-row.light {
+  background: #fff;
+  color: #111;
+}
+
+.specimen.dark,
+.waterfall-row.dark {
+  background: #111;
+  color: #f2f2ee;
+}
+
+.axes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 8px 16px;
+  margin: 12px 0;
+}
+
+.axis,
+.size-control {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.axis input[type="range"],
+.size-control input[type="range"] {
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.saved {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.waterfall {
+  margin-top: 16px;
+  display: grid;
+  gap: 4px;
+}
+
+.waterfall-row {
+  margin: 0;
+  padding: 4px 12px;
+  border-radius: 4px;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+  #app {
+    padding: 16px;
+  }
+  .panel {
+    padding: 12px;
+  }
+}
