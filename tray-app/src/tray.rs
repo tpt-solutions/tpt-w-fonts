@@ -17,8 +17,8 @@ use winit::event::WindowEvent;
 use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoop};
 use winit::window::WindowId;
 
-use crate::Platform;
 use crate::ipc_server;
+use tpt_fonts_core::PlatformBackend;
 
 /// Events delivered to the UI thread.
 pub enum UserEvent {
@@ -37,7 +37,7 @@ enum Action {
 }
 
 struct App {
-    manager: SessionManager<Platform>,
+    manager: SessionManager<PlatformBackend>,
     exe: PathBuf,
     tray: Option<TrayIcon>,
     actions: HashMap<MenuId, Action>,
@@ -45,7 +45,7 @@ struct App {
 }
 
 pub fn run(
-    manager: SessionManager<Platform>,
+    manager: SessionManager<PlatformBackend>,
     listener: interprocess::local_socket::Listener,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let event_loop = EventLoop::<UserEvent>::with_user_event().build()?;

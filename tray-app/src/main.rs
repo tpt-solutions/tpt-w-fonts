@@ -9,27 +9,10 @@ mod tray;
 
 use std::process::ExitCode;
 
-use tpt_fonts_core::{Recovery, SessionManager, SessionStore, app_state_dir, recover_orphans};
-
-#[cfg(windows)]
-pub type Platform = tpt_fonts_core::WindowsBackend<tpt_fonts_core::NativeWin32>;
-
-#[cfg(windows)]
-fn platform() -> tpt_fonts_core::Result<Platform> {
-    tpt_fonts_core::WindowsBackend::for_current_user()
-}
-
-#[cfg(not(windows))]
-pub type Platform = tpt_fonts_core::FontconfigBackend<tpt_fonts_core::SystemRunner>;
-
-#[cfg(not(windows))]
-fn platform() -> tpt_fonts_core::Result<Platform> {
-    let paths = tpt_fonts_core::LinuxPaths::for_current_user()?;
-    Ok(tpt_fonts_core::FontconfigBackend::new(
-        tpt_fonts_core::SystemRunner,
-        paths,
-    ))
-}
+use tpt_fonts_core::{
+    PlatformBackend, Recovery, SessionManager, SessionStore, app_state_dir, platform_backend,
+    recover_orphans,
+};
 
 fn main() -> ExitCode {
     let Some(state_dir) = app_state_dir() else {
@@ -50,7 +33,7 @@ fn main() -> ExitCode {
         }
     };
 
-    let backend = match platform() {
+    let backend: PlatformBackend = match platform_backend() {
         Ok(backend) => backend,
         Err(err) => {
             eprintln!("tpt-fonts-tray: {err}");
