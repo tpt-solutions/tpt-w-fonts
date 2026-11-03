@@ -32,7 +32,7 @@ Decisions locked in for this roadmap:
 | Phase | Area | Progress |
 |-------|------|----------|
 | 0 | Project Setup & Licensing | 🟡 In Progress (repo hosting pending) |
-| 1 | Core Font Data Model & Scanning Engine | ❌ Not Started |
+| 1 | Core Font Data Model & Scanning Engine | 🟡 In Progress |
 | 2 | Duplicate Detection | ❌ Not Started |
 | 3 | Variable Font Preview Engine | ❌ Not Started |
 | 4 | Windows Backend: User-Level Install & Session Activation | ❌ Not Started |
@@ -60,13 +60,13 @@ Decisions locked in for this roadmap:
 - [ ] Repo hosting under `tpt-solutions` GitHub org
 
 ## Phase 1 — Core Font Data Model & Scanning Engine
-- [ ] Font metadata model (family, subfamily/style, full name, PostScript name, version, vendor/foundry, embedding/`fsType`, file path, format, content hash)
-- [ ] Font file parser (`ttf-parser` or equivalent) extracting `name`, `OS/2`, `head`, and `fvar` (variable axes + named instances) tables
-- [ ] Font format detection: TTF / OTF / TTC / variable vs static
-- [ ] Recursive scan of font directories (Windows per-user + system read-only view, Linux `~/.local/share/fonts` + `/usr/share/fonts` read-only view) building an in-memory catalog
-- [ ] Catalog persistence for fast cold start (SQLite or serialized cache)
+- [x] Font metadata model (family, subfamily/style, full name, PostScript name, version, vendor/foundry, embedding/`fsType`, file path, format, content hash)
+- [x] Font file parser (`ttf-parser` or equivalent) extracting `name`, `OS/2`, `head`, and `fvar` (variable axes + named instances) tables
+- [x] Font format detection: TTF / OTF / TTC / variable vs static
+- [x] Recursive scan of font directories (Windows per-user + system read-only view, Linux `~/.local/share/fonts` + `/usr/share/fonts` read-only view) building an in-memory catalog
+- [x] Catalog persistence for fast cold start (SQLite or serialized cache) — JSON cache with schema version and atomic write (not SQLite)
 - [ ] Filesystem watch on font directories (`ReadDirectoryChangesW` / `inotify`) to keep the catalog live
-- [ ] Unit tests: parsing fixtures across TTF/OTF/TTC/variable-font samples
+- [x] Unit tests: parsing fixtures across TTF/OTF/TTC/variable-font samples — runs against installed system fonts; skips when absent, no font binaries committed
 
 ## Phase 2 — Duplicate Detection
 - [ ] Exact duplicate detection: content hash (e.g. blake3) grouping across catalog
