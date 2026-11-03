@@ -140,3 +140,19 @@ fn candidate_paths(root: &Path) -> impl Iterator<Item = PathBuf> {
         .filter(|entry| entry.file_type().is_file() && is_font_extension(entry.path()))
         .map(|entry| entry.into_path())
 }
+
+/// Loads the per-user catalog cache, refreshes it against the OS font folders, and saves it.
+///
+/// Returns the refreshed catalog and the refresh report. The cache lives in the app state
+/// directory, so repeated calls are cheap: unchanged files are not re-read.
+pub fn load_default_catalog() -> Result<(Catalog, RefreshReport)> {
+    let dir = crate::platform::app_state_dir().ok_or_else(|| FontError::Backend {
+        path: PathBuf::new(),
+        reason: "no per-user state directory could be determined".into(),
+    })?;
+    let cache = dir.join("catalog.json");
+    let mut catalog = Catalog::load(&cache);
+    let report = catalog.refresh(&crate::platform::default_scan_roots());
+    catalog.save(&cache)?;
+    Ok((catalog, report))
+}

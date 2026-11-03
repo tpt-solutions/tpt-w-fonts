@@ -37,8 +37,31 @@ pub enum FontError {
     #[error("{} is outside the user font directory and cannot be changed", path.display())]
     OutsideFontDirectory { path: PathBuf },
 
+    #[error("{0}")]
+    Usage(String),
+
+    #[error("no font matches '{0}'")]
+    NotFound(String),
+
+    #[error(
+        "'{query}' matches several fonts; give a full path instead: {}",
+        join_paths(paths)
+    )]
+    Ambiguous { query: String, paths: Vec<PathBuf> },
+
+    #[error("the tpt-fonts tray process is not running; start tpt-fonts-tray first")]
+    TrayNotRunning,
+
     #[error("serialisation failed: {0}")]
     Serialise(#[from] serde_json::Error),
 }
 
 pub type Result<T> = std::result::Result<T, FontError>;
+
+fn join_paths(paths: &[PathBuf]) -> String {
+    paths
+        .iter()
+        .map(|p| p.display().to_string())
+        .collect::<Vec<_>>()
+        .join(", ")
+}

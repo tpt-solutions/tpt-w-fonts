@@ -113,3 +113,27 @@ fn xdg_or_home(var: &str, fallback: &str) -> Option<PathBuf> {
         .map(PathBuf::from)
         .or_else(|| env::var_os("HOME").map(|home| PathBuf::from(home).join(fallback)))
 }
+
+/// The font backend for the current OS. The tray and the CLI both use this.
+#[cfg(windows)]
+pub type PlatformBackend = crate::win32::WindowsBackend<crate::win32::NativeWin32>;
+
+/// The font backend for the current OS. The tray and the CLI both use this.
+#[cfg(not(windows))]
+pub type PlatformBackend = crate::linux::FontconfigBackend<crate::linux::SystemRunner>;
+
+/// Builds the backend for the current user.
+#[cfg(windows)]
+pub fn platform_backend() -> crate::error::Result<PlatformBackend> {
+    crate::win32::WindowsBackend::for_current_user()
+}
+
+/// Builds the backend for the current user.
+#[cfg(not(windows))]
+pub fn platform_backend() -> crate::error::Result<PlatformBackend> {
+    let paths = crate::linux::LinuxPaths::for_current_user()?;
+    Ok(crate::linux::FontconfigBackend::new(
+        crate::linux::SystemRunner,
+        paths,
+    ))
+}
