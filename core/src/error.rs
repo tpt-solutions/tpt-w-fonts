@@ -19,6 +19,15 @@ pub enum FontError {
     #[error("failed to parse {}: {reason}", path.display())]
     Parse { path: PathBuf, reason: String },
 
+    #[error("font has no face at index {0}")]
+    NoSuchFace(u32),
+
+    #[error("font has no variation axis '{0}'")]
+    UnknownAxis(String),
+
+    #[error("font has no named instance {0}")]
+    UnknownInstance(usize),
+
     #[error("catalog serialisation failed: {0}")]
     Serialise(#[from] serde_json::Error),
 }
