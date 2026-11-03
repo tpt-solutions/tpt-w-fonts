@@ -34,7 +34,7 @@ Decisions locked in for this roadmap:
 | 0 | Project Setup & Licensing | 🟡 In Progress (repo hosting pending) |
 | 1 | Core Font Data Model & Scanning Engine | 🟡 In Progress |
 | 2 | Duplicate Detection | 🟡 In Progress (UI pending) |
-| 3 | Variable Font Preview Engine | ❌ Not Started |
+| 3 | Variable Font Preview Engine | 🟡 Implemented, GUI not yet exercised |
 | 4 | Windows Backend: User-Level Install & Session Activation | ❌ Not Started |
 | 5 | Linux Backend: Fontconfig & Session Activation | ❌ Not Started |
 | 6 | Resident Tray App & Session Manager | ❌ Not Started |
@@ -76,12 +76,12 @@ Decisions locked in for this roadmap:
 - [x] Unit tests: hash-based and metadata-based grouping against fixture sets (true dupes, false-positive near-matches)
 
 ## Phase 3 — Variable Font Preview Engine
-- [ ] `fvar` axis parsing (`wght`, `wdth`, `slnt`, `ital`, `opsz`, custom axes) + named instances
-- [ ] Live preview data model: selected font, per-axis current value, sample text, size, saved custom instances
-- [ ] Preview rendering via Tauri asset/custom protocol serving the local font file to the frontend, rendered with `@font-face` + `font-variation-settings`
-- [ ] Preview UI: per-axis sliders (min/default/max), named-instance quick-select, sample text input, size control, light/dark background toggle
-- [ ] Static (non-variable) font preview fallback path — same UI, no axis sliders
-- [ ] Specimen/waterfall view (sample text rendered at multiple sizes)
+- [x] `fvar` axis parsing (`wght`, `wdth`, `slnt`, `ital`, `opsz`, custom axes) + named instances
+- [x] Live preview data model: selected font, per-axis current value, sample text, size, saved custom instances
+- [x] Preview rendering via Tauri asset/custom protocol serving the local font file to the frontend, rendered with `@font-face` + `font-variation-settings` — implemented via asset protocol and FontFace; not yet exercised in a running window
+- [x] Preview UI: per-axis sliders (min/default/max), named-instance quick-select, sample text input, size control, light/dark background toggle — implemented in plain TS; not yet exercised in a running window
+- [x] Static (non-variable) font preview fallback path — same UI, no axis sliders
+- [x] Specimen/waterfall view (sample text rendered at multiple sizes) — waterfall sizes shared with the core constant
 
 ## Phase 4 — Windows Backend: User-Level Install & Session Activation
 - [ ] Shared `trait FontBackend` (install/uninstall/activate-session/deactivate-session/list) implemented per OS
