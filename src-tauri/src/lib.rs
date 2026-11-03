@@ -11,8 +11,9 @@ use serde::Serialize;
 use tauri::{AppHandle, Manager};
 use tpt_fonts_core::{
     ActivationSource, DuplicateGroup, FontBackend, FontError, FontRow, FontSource, PreviewState,
-    Request, Response, autostart_enabled, build_rows, find_duplicates, load_default_catalog,
-    platform_backend, read_font_file, send_request, set_autostart,
+    Request, Resolution, Response, autostart_enabled, build_rows, find_duplicates,
+    load_default_catalog, platform_backend, read_font_file, resolve_exact_group, send_request,
+    set_autostart,
 };
 
 /// The library as the frontend shows it.
@@ -111,6 +112,22 @@ fn duplicate_groups() -> Result<Vec<DuplicateGroup>, String> {
     Ok(find_duplicates(&catalog))
 }
 
+/// Plans (`apply` false) or carries out (`apply` true) keeping `keep` and trashing the other
+/// copies in an identical-copies group. Nothing is permanently deleted.
+#[tauri::command]
+fn duplicate_resolve(key: String, keep: String, apply: bool) -> Result<Resolution, String> {
+    let (catalog, _) = load_default_catalog().map_err(message)?;
+    resolve_exact_group(&catalog, &key, Path::new(&keep), !apply).map_err(message)
+}
+
+#[tauri::command]
+fn session_deactivate_all() -> Result<(), String> {
+    match send_request(&Request::DeactivateAll).map_err(message)? {
+        Response::Ok | Response::Active { .. } => Ok(()),
+        Response::Error { message } => Err(message),
+    }
+}
+
 #[tauri::command]
 fn autostart_get() -> bool {
     autostart_enabled()
@@ -206,6 +223,8 @@ pub fn run() {
             font_install,
             font_uninstall,
             duplicate_groups,
+            duplicate_resolve,
+            session_deactivate_all,
             autostart_get,
             autostart_set,
             tray_start,
