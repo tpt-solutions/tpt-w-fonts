@@ -25,4 +25,4 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 tpt-fonts-core = { path = "../core" }
-tauri = { version = "2", features = [] }
+tauri = { version = "2", features = ["protocol-asset"] }
