@@ -7,6 +7,7 @@
 //! catalog and the filesystem watcher. Phase 2 adds duplicate detection and safe resolution,
 //! and Phase 3 adds the live preview model for variable fonts.
 
+mod backend;
 mod catalog;
 mod duplicates;
 mod error;
@@ -17,7 +18,10 @@ mod parse;
 mod platform;
 mod preview;
 mod watch;
+#[cfg(windows)]
+mod win32;
 
+pub use backend::{FontBackend, InstalledFont};
 pub use catalog::{Catalog, RefreshReport};
 pub use duplicates::{
     DuplicateGroup, DuplicateKind, Resolution, find_duplicates, keep_one, metadata_diff,
@@ -34,3 +38,5 @@ pub use preview::{
     AxisValue, Background, DEFAULT_SAMPLE_TEXT, PreviewState, SavedInstance, WATERFALL_SIZES,
 };
 pub use watch::{FontChange, FontWatcher};
+#[cfg(windows)]
+pub use win32::{NativeWin32, Win32Api, WindowsBackend};

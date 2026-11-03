@@ -28,6 +28,15 @@ pub enum FontError {
     #[error("font has no named instance {0}")]
     UnknownInstance(usize),
 
+    #[error("{} could not be handled: {reason}", path.display())]
+    Backend { path: PathBuf, reason: String },
+
+    #[error("a font named '{0}' is already installed")]
+    AlreadyInstalled(String),
+
+    #[error("{} is outside the user font directory and cannot be changed", path.display())]
+    OutsideFontDirectory { path: PathBuf },
+
     #[error("catalog serialisation failed: {0}")]
     Serialise(#[from] serde_json::Error),
 }
