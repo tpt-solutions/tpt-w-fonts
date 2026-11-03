@@ -296,3 +296,63 @@ main [hidden] {
   overflow-wrap: anywhere;
   font-size: 0.85rem;
 }
+
+/* ---- Session bar, details, duplicate plans -------------------------------- */
+
+.session-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.details {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 16px;
+  margin: 12px 0 0;
+  font-size: 0.9rem;
+}
+
+.details dt {
+  color: var(--muted);
+}
+
+.details dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.details dd.path {
+  font-size: 0.8rem;
+}
+
+.plan {
+  margin-top: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+button.small {
+  padding: 2px 8px;
+  font-size: 0.85rem;
+}
+
+button.danger {
+  border-color: var(--error);
+  color: var(--error);
+}
+
+.table-wrap {
+  max-height: 55vh;
+  overflow: auto;
+  margin-top: 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.table-wrap .library thead th {
+  position: sticky;
+  top: 0;
+  background: var(--panel);
+}

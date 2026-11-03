@@ -7,6 +7,7 @@ import { createDuplicatesPanel } from "./duplicates";
 import { createLibraryPanel } from "./library";
 import { createPreviewPanel } from "./preview";
 import { createSettingsPanel } from "./settings";
+import { api, errorMessage } from "./api";
 import { button, el, statusLine } from "./dom";
 
 type Tab = "library" | "preview" | "duplicates" | "settings";
@@ -15,10 +16,27 @@ const root = document.querySelector<HTMLDivElement>("#app");
 
 if (root) {
   const preview = createPreviewPanel();
-  const library = createLibraryPanel((path) => {
-    showTab("preview");
-    void preview.open(path);
+  const sessionSummary = el("span", "meta");
+  const library = createLibraryPanel(
+    (path) => {
+      showTab("preview");
+      void preview.open(path);
+    },
+    (view) => {
+      const active = view.rows.filter((row) => row.state === "session").length;
+      sessionSummary.textContent = view.tray_running
+        ? `${active} font(s) active this session`
+        : "Tray not running";
+      deactivateAll.disabled = !view.tray_running || active === 0;
+    },
+  );
+  const deactivateAll = button("Deactivate all", () => {
+    void api
+      .sessionDeactivateAll()
+      .catch((err: unknown) => dropStatus.show(errorMessage(err)))
+      .finally(() => void library.refresh());
   });
+  deactivateAll.disabled = true;
   const duplicates = createDuplicatesPanel();
   const settings = createSettingsPanel();
 
@@ -66,7 +84,9 @@ if (root) {
 
   const dropStatus = statusLine();
   const header = el("header");
-  header.append(el("h1", "", "tpt-fonts"), tabBar);
+  const sessionBar = el("div", "session-bar");
+  sessionBar.append(sessionSummary, deactivateAll);
+  header.append(el("h1", "", "tpt-fonts"), sessionBar, tabBar);
 
   const main = el("main");
   for (const tab of Object.keys(panels) as Tab[]) {

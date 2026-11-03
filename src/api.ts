@@ -11,6 +11,12 @@ export type FontState = "installed" | "session" | "available";
 export type FontSource = "User" | "System";
 export type FontFormat = "Ttf" | "Otf" | "Ttc";
 export type DuplicateKind = "ExactContent" | "SameMetadata";
+export type EmbeddingRights =
+  | "Installable"
+  | "Restricted"
+  | "PreviewAndPrint"
+  | "Editable"
+  | "Unspecified";
 
 export interface AxisValue {
   tag: string;
@@ -57,6 +63,10 @@ export interface FontRow {
   full_name: string;
   is_variable: boolean;
   faces: number;
+  version: string;
+  vendor_id: string | null;
+  embedding: EmbeddingRights;
+  units_per_em: number;
 }
 
 export interface LibraryView {
@@ -71,6 +81,11 @@ export interface DuplicateGroup {
   members: string[];
 }
 
+export interface Resolution {
+  trashed: string[];
+  skipped_system: string[];
+}
+
 export const api = {
   libraryList: () => invoke<LibraryView>("library_list"),
   sessionActivate: (path: string) => invoke<void>("session_activate", { path }),
@@ -78,6 +93,9 @@ export const api = {
   fontInstall: (path: string) => invoke<string>("font_install", { path }),
   fontUninstall: (path: string) => invoke<void>("font_uninstall", { path }),
   duplicateGroups: () => invoke<DuplicateGroup[]>("duplicate_groups"),
+  duplicateResolve: (key: string, keep: string, apply: boolean) =>
+    invoke<Resolution>("duplicate_resolve", { key, keep, apply }),
+  sessionDeactivateAll: () => invoke<void>("session_deactivate_all"),
   autostartGet: () => invoke<boolean>("autostart_get"),
   autostartSet: (enabled: boolean) => invoke<void>("autostart_set", { enabled }),
   trayStart: () => invoke<void>("tray_start"),

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Copyright (c) 2026 TPT Solutions
 
-// The library: every scanned font with its state, search and filter, and the actions that apply
-// to the selected font.
+// The library: every scanned font with its state, search and filter, the metadata of the selected
+// font, and the actions that apply to it.
 
 import { api, errorMessage, type FontRow, type FontState, type LibraryView } from "./api";
 import { button, el, statusLine } from "./dom";
@@ -13,16 +13,25 @@ const STATE_LABEL: Record<FontState, string> = {
   available: "Available",
 };
 
+const EMBEDDING_LABEL: Record<FontRow["embedding"], string> = {
+  Installable: "Installable: may be embedded and installed",
+  Restricted: "Restricted: may not be embedded or edited",
+  PreviewAndPrint: "Preview and print only",
+  Editable: "Editable: may be embedded and edited",
+  Unspecified: "Not specified",
+};
+
 export interface LibraryPanel {
   element: HTMLElement;
   refresh: () => Promise<void>;
   /** Installs each path permanently, then refreshes. Used by drag and drop. */
   installPaths: (paths: string[]) => Promise<void>;
-  /** Whether the tray answered on the last refresh. */
-  trayRunning: () => boolean;
 }
 
-export function createLibraryPanel(onPreview: (path: string) => void): LibraryPanel {
+export function createLibraryPanel(
+  onPreview: (path: string) => void,
+  onChange: (view: LibraryView) => void,
+): LibraryPanel {
   let rows: FontRow[] = [];
   let trayUp = false;
   let selected: FontRow | null = null;
@@ -30,12 +39,9 @@ export function createLibraryPanel(onPreview: (path: string) => void): LibraryPa
   const status = statusLine();
   const notice = el("div", "notice");
   notice.hidden = true;
-  const trayButton = button("Start tray", () => {
-    void run(() => api.trayStart());
-  });
   notice.append(
     el("span", "", "The tray process is not running, so session activation is unavailable. "),
-    trayButton,
+    button("Start tray", () => void run(() => api.trayStart())),
   );
 
   const search = el("input");
@@ -56,9 +62,8 @@ export function createLibraryPanel(onPreview: (path: string) => void): LibraryPa
     stateFilter.append(option);
   }
 
-  const refreshButton = button("Rescan", () => void refresh());
   const toolbar = el("div", "row");
-  toolbar.append(search, stateFilter, refreshButton);
+  toolbar.append(search, stateFilter, button("Rescan", () => void refresh()));
 
   const table = el("table", "library");
   const head = el("thead");
@@ -72,12 +77,15 @@ export function createLibraryPanel(onPreview: (path: string) => void): LibraryPa
 
   const count = el("p", "meta");
 
+  const detail = el("dl", "details");
   const actions = el("div", "row actions");
   actions.hidden = true;
-  const detail = el("p", "meta");
+  detail.hidden = true;
 
   const panel = el("section", "panel");
-  panel.append(notice, status.element, toolbar, count, table, detail, actions);
+  const tableWrap = el("div", "table-wrap");
+  tableWrap.append(table);
+  panel.append(notice, status.element, toolbar, count, detail, actions, tableWrap);
 
   search.addEventListener("input", renderRows);
   stateFilter.addEventListener("change", renderRows);
@@ -88,8 +96,9 @@ export function createLibraryPanel(onPreview: (path: string) => void): LibraryPa
     return rows.filter((row) => {
       if (wanted && row.state !== wanted) return false;
       if (!query) return true;
-      return [row.family, row.subfamily, row.full_name, row.path]
-        .some((text) => text.toLowerCase().includes(query));
+      return [row.family, row.subfamily, row.full_name, row.path].some((text) =>
+        text.toLowerCase().includes(query),
+      );
     });
   }
 
@@ -116,7 +125,7 @@ export function createLibraryPanel(onPreview: (path: string) => void): LibraryPa
       body.append(tr);
     }
     count.textContent = `${shown.length} of ${rows.length} font file(s)`;
-    renderActions();
+    renderDetail();
   }
 
   function select(row: FontRow): void {
@@ -124,16 +133,30 @@ export function createLibraryPanel(onPreview: (path: string) => void): LibraryPa
     renderRows();
   }
 
-  function renderActions(): void {
+  function renderDetail(): void {
     actions.replaceChildren();
+    detail.replaceChildren();
     if (!selected) {
       actions.hidden = true;
-      detail.textContent = "";
+      detail.hidden = true;
       return;
     }
     const row = selected;
-    actions.hidden = false;
-    detail.textContent = `${row.full_name || row.family} · ${row.source} · ${row.is_variable ? "variable" : "static"}`;
+
+    const facts: [string, string][] = [
+      ["Full name", row.full_name || row.family],
+      ["Version", row.version || "unknown"],
+      ["Vendor", row.vendor_id ?? "unknown"],
+      ["Type", row.is_variable ? "Variable" : "Static"],
+      ["Units per em", row.units_per_em ? String(row.units_per_em) : "unknown"],
+      ["Source", row.source === "User" ? "Your fonts" : "System fonts (read-only)"],
+      ["Embedding", EMBEDDING_LABEL[row.embedding]],
+      ["Path", row.path],
+    ];
+    for (const [term, value] of facts) {
+      detail.append(el("dt", "", term), el("dd", term === "Path" ? "path" : "", value));
+    }
+    detail.hidden = false;
 
     if (row.state === "session") {
       actions.append(button("Deactivate for session", () => runOn(row, api.sessionDeactivate)));
@@ -147,14 +170,11 @@ export function createLibraryPanel(onPreview: (path: string) => void): LibraryPa
     if (row.state === "installed") {
       actions.append(button("Uninstall", () => runOn(row, api.fontUninstall)));
     } else {
-      actions.append(
-        button("Install for this user", () => {
-          void installPaths([row.path]);
-        }),
-      );
+      actions.append(button("Install for this user", () => void installPaths([row.path])));
     }
 
     actions.append(button("Preview", () => onPreview(row.path)));
+    actions.hidden = false;
   }
 
   async function runOn(row: FontRow, action: (path: string) => Promise<unknown>): Promise<void> {
@@ -174,7 +194,7 @@ export function createLibraryPanel(onPreview: (path: string) => void): LibraryPa
 
   async function refresh(): Promise<void> {
     try {
-      const view: LibraryView = await api.libraryList();
+      const view = await api.libraryList();
       rows = view.rows;
       trayUp = view.tray_running;
       notice.hidden = trayUp;
@@ -186,6 +206,7 @@ export function createLibraryPanel(onPreview: (path: string) => void): LibraryPa
         selected = rows.find((r) => r.path === path) ?? null;
       }
       renderRows();
+      onChange(view);
     } catch (err) {
       status.show(errorMessage(err));
     }
@@ -205,10 +226,5 @@ export function createLibraryPanel(onPreview: (path: string) => void): LibraryPa
     await refresh();
   }
 
-  return {
-    element: panel,
-    refresh,
-    installPaths,
-    trayRunning: () => trayUp,
-  };
+  return { element: panel, refresh, installPaths };
 }
