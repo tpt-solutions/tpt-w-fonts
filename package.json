@@ -1,0 +1,20 @@
+{
+  "name": "tpt-fonts",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Modern font manager for designers & devs",
+  "license": "MIT OR Apache-2.0",
+  "author": "TPT Solutions",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "tauri": "tauri"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.12.4",
+    "typescript": "^7.0.2",
+    "vite": "^6.4.5"
+  }
+}
