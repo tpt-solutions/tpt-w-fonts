@@ -39,7 +39,7 @@ Decisions locked in for this roadmap:
 | 5 | Linux Backend: Fontconfig & Session Activation | 🟡 Implemented, not yet run on Linux |
 | 6 | Resident Tray App & Session Manager | 🟡 Tray runs on Windows; GUI client, Linux and logoff cleanup pending |
 | 7 | CLI | 🟡 Implemented; SVG preview only, uninstall not run from the CLI |
-| 8 | Tauri GUI: Main Application | 🟡 Library, preview and settings run; detail, duplicates and tray views are partial |
+| 8 | Tauri GUI: Main Application | 🟡 Library, detail, preview, duplicates and settings run; grouping, thumbnails and scan directories open |
 | 9 | Archon Support (Design Only) | ❌ Not Started |
 | 10 | Performance & Polish | ❌ Not Started |
 | 11 | Testing & QA | ❌ Not Started |
@@ -120,10 +120,10 @@ Decisions locked in for this roadmap:
 ## Phase 8 — Tauri GUI: Main Application
 - [ ] Main window: font catalog list/grid — list view with state, family, style, format and path, sorted by family; family grouping and thumbnails are still open
 - [ ] Search/filter — text search and state filter work; format and variable/static filters are only in the CLI so far
-- [ ] Font detail panel — action bar with activate, deactivate, install, uninstall and preview; metadata such as embedding rights (fsType) is not shown yet
-- [ ] Duplicate resolution view — read-only groups from the core; resolving (keep one, trash the rest) is not exposed to the GUI yet
+- [x] Font detail panel — shows full name, version, vendor, type, units per em, source, embedding rights (fsType) and path, with the actions for the selected font; checked in a screenshot
+- [x] Duplicate resolution view — identical copies can be resolved: keep one, review the dry-run plan, then confirm to trash the rest. Same-metadata groups stay report-only. The trash path is covered by a dry-run test only; it has not been run on real duplicates
 - [x] Variable font preview view — opened from the library Preview action or the Preview tab (built in Phase 3)
-- [ ] Session status indicator — shows whether the tray is running, with a Start button; the list of active fonts and quick deactivate are not in the header yet
+- [x] Session status indicator — header shows the number of session fonts, a Deactivate all button, and the tray state with a Start button. A per-font list is in the library filter, not the header
 - [ ] Settings: autostart toggle, scan-directory configuration, light/dark theme — autostart and theme are in; scan-directory configuration is not
 - [ ] Drag-and-drop font file import — drop handler installs dropped fonts; verified by code review only, not by dragging a file
 
