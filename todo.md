@@ -33,7 +33,7 @@ Decisions locked in for this roadmap:
 |-------|------|----------|
 | 0 | Project Setup & Licensing | 🟡 In Progress (repo hosting pending) |
 | 1 | Core Font Data Model & Scanning Engine | 🟡 In Progress |
-| 2 | Duplicate Detection | ❌ Not Started |
+| 2 | Duplicate Detection | 🟡 In Progress (UI pending) |
 | 3 | Variable Font Preview Engine | ❌ Not Started |
 | 4 | Windows Backend: User-Level Install & Session Activation | ❌ Not Started |
 | 5 | Linux Backend: Fontconfig & Session Activation | ❌ Not Started |
@@ -69,11 +69,11 @@ Decisions locked in for this roadmap:
 - [x] Unit tests: parsing fixtures across TTF/OTF/TTC/variable-font samples — runs against installed system fonts; skips when absent, no font binaries committed
 
 ## Phase 2 — Duplicate Detection
-- [ ] Exact duplicate detection: content hash (e.g. blake3) grouping across catalog
-- [ ] Metadata duplicate detection: same family + subfamily + version + vendor across different files/hashes
-- [ ] Duplicate group model + resolution actions (keep one, remove others, side-by-side metadata diff view)
-- [ ] Safe-delete flow (send to OS trash/recycle bin, never permanent delete)
-- [ ] Unit tests: hash-based and metadata-based grouping against fixture sets (true dupes, false-positive near-matches)
+- [x] Exact duplicate detection: content hash (e.g. blake3) grouping across catalog
+- [x] Metadata duplicate detection: same family + subfamily + version + vendor across different files/hashes
+- [x] Duplicate group model + resolution actions (keep one, remove others, side-by-side metadata diff view) — core model, keep-one plan and side-by-side diff data; the view itself lands in Phase 8
+- [x] Safe-delete flow (send to OS trash/recycle bin, never permanent delete) — uses the OS trash; dry-run covered by tests, live trash not exercised in CI
+- [x] Unit tests: hash-based and metadata-based grouping against fixture sets (true dupes, false-positive near-matches)
 
 ## Phase 3 — Variable Font Preview Engine
 - [ ] `fvar` axis parsing (`wght`, `wdth`, `slnt`, `ital`, `opsz`, custom axes) + named instances
