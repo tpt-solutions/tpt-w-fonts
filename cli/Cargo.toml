@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# Copyright (c) 2026 TPT Solutions
+
+[package]
+name = "tpt-fonts-cli"
+description = "Scriptable command-line interface for tpt-fonts"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "tpt-fonts"
+path = "src/main.rs"
+
+[dependencies]
+tpt-fonts-core = { path = "../core" }

@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# Copyright (c) 2026 TPT Solutions
+
+[package]
+name = "tpt-fonts-gui"
+description = "Tauri backend wrapping tpt-fonts-core for the desktop UI"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[lib]
+# Tauri's mobile entry point needs a library target; the desktop build uses main.rs.
+name = "tpt_fonts_gui_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[[bin]]
+name = "tpt-fonts-gui"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tpt-fonts-core = { path = "../core" }
+tauri = { version = "2", features = [] }
