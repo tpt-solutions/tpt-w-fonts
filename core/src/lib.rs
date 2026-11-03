@@ -4,9 +4,10 @@
 //! Font engine, OS backends and session manager for tpt-fonts.
 //!
 //! Phase 1 covers the data model, the parser, the recursive scanner, the persisted
-//! catalog and the filesystem watcher. Duplicate detection and variable previews come later.
+//! catalog and the filesystem watcher. Phase 2 adds duplicate detection and safe resolution.
 
 mod catalog;
+mod duplicates;
 mod error;
 mod format;
 mod fvar;
@@ -16,6 +17,9 @@ mod platform;
 mod watch;
 
 pub use catalog::{Catalog, RefreshReport};
+pub use duplicates::{
+    DuplicateGroup, DuplicateKind, Resolution, find_duplicates, keep_one, metadata_diff,
+};
 pub use error::{FontError, Result};
 pub use format::{detect_format, is_font_extension};
 pub use model::{

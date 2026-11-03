@@ -38,6 +38,14 @@ pub struct RefreshReport {
 }
 
 impl Catalog {
+    /// Builds a catalog from already-parsed entries, for example in tests or after a merge.
+    pub fn from_files(files: Vec<FontFile>) -> Catalog {
+        Catalog {
+            schema_version: SCHEMA_VERSION,
+            files,
+        }
+    }
+
     pub fn files(&self) -> &[FontFile] {
         &self.files
     }
