@@ -2,11 +2,15 @@
 // Copyright (c) 2026 TPT Solutions
 
 // Typed wrappers over the Tauri commands in src-tauri/src/lib.rs.
-// Field names mirror the serde output of tpt-fonts-core's preview model.
+// Field names mirror the serde output of tpt-fonts-core.
 
 import { invoke } from "@tauri-apps/api/core";
 
 export type Background = "light" | "dark";
+export type FontState = "installed" | "session" | "available";
+export type FontSource = "User" | "System";
+export type FontFormat = "Ttf" | "Otf" | "Ttc";
+export type DuplicateKind = "ExactContent" | "SameMetadata";
 
 export interface AxisValue {
   tag: string;
@@ -43,22 +47,55 @@ export interface PreviewState {
   background: Background;
 }
 
+export interface FontRow {
+  path: string;
+  state: FontState;
+  source: FontSource;
+  format: FontFormat;
+  family: string;
+  subfamily: string;
+  full_name: string;
+  is_variable: boolean;
+  faces: number;
+}
+
+export interface LibraryView {
+  rows: FontRow[];
+  tray_running: boolean;
+  unreadable: number;
+}
+
+export interface DuplicateGroup {
+  kind: DuplicateKind;
+  key: string;
+  members: string[];
+}
+
 export const api = {
+  libraryList: () => invoke<LibraryView>("library_list"),
+  sessionActivate: (path: string) => invoke<void>("session_activate", { path }),
+  sessionDeactivate: (path: string) => invoke<void>("session_deactivate", { path }),
+  fontInstall: (path: string) => invoke<string>("font_install", { path }),
+  fontUninstall: (path: string) => invoke<void>("font_uninstall", { path }),
+  duplicateGroups: () => invoke<DuplicateGroup[]>("duplicate_groups"),
+  autostartGet: () => invoke<boolean>("autostart_get"),
+  autostartSet: (enabled: boolean) => invoke<void>("autostart_set", { enabled }),
+  trayStart: () => invoke<void>("tray_start"),
+
   openPreview: (path: string, faceIndex: number) =>
     invoke<PreviewState>("open_preview", { path, faceIndex }),
-
   setAxis: (state: PreviewState, tag: string, value: number) =>
     invoke<PreviewState>("preview_set_axis", { state, tag, value }),
-
-  resetAxes: (state: PreviewState) =>
-    invoke<PreviewState>("preview_reset_axes", { state }),
-
+  resetAxes: (state: PreviewState) => invoke<PreviewState>("preview_reset_axes", { state }),
   applyNamed: (state: PreviewState, index: number) =>
     invoke<PreviewState>("preview_apply_named", { state, index }),
-
-  save: (state: PreviewState, name: string) =>
-    invoke<PreviewState>("preview_save", { state, name }),
-
+  save: (state: PreviewState, name: string) => invoke<PreviewState>("preview_save", { state, name }),
   applySaved: (state: PreviewState, index: number) =>
     invoke<PreviewState>("preview_apply_saved", { state, index }),
 };
+
+/** Turns whatever a rejected invoke produced into a readable line. */
+export function errorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  return String(err);
+}

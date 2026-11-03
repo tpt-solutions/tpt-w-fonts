@@ -169,3 +169,130 @@ select:disabled {
     padding: 12px;
   }
 }
+
+/* ---- Application shell ---------------------------------------------------- */
+
+header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tab[aria-current="page"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+main > section + section {
+  margin-top: 12px;
+}
+
+main [hidden] {
+  display: none;
+}
+
+.dragging main {
+  outline: 2px dashed var(--accent);
+  outline-offset: 6px;
+}
+
+.notice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.setting {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 8px 0;
+}
+
+/* ---- Library table -------------------------------------------------------- */
+
+.library {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.library th,
+.library td {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.library tbody tr {
+  cursor: pointer;
+}
+
+.library tbody tr:hover,
+.library tbody tr:focus-visible,
+.library tbody tr.selected {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  outline: none;
+}
+
+.library td.path {
+  color: var(--muted);
+  overflow-wrap: anywhere;
+  font-size: 0.8rem;
+}
+
+.state {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.state.installed {
+  color: var(--accent);
+}
+
+.state.session {
+  color: #2d7a3e;
+}
+
+.state.available {
+  color: var(--muted);
+}
+
+.actions {
+  margin-top: 8px;
+}
+
+/* ---- Duplicates ----------------------------------------------------------- */
+
+.group {
+  margin: 12px 0;
+}
+
+.group ul {
+  padding-left: 18px;
+}
+
+.group li.path {
+  overflow-wrap: anywhere;
+  font-size: 0.85rem;
+}
