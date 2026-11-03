@@ -36,7 +36,7 @@ Decisions locked in for this roadmap:
 | 2 | Duplicate Detection | 🟡 In Progress (UI pending) |
 | 3 | Variable Font Preview Engine | 🟡 Implemented, GUI not yet exercised |
 | 4 | Windows Backend: User-Level Install & Session Activation | 🟡 In Progress (tray wiring pending) |
-| 5 | Linux Backend: Fontconfig & Session Activation | ❌ Not Started |
+| 5 | Linux Backend: Fontconfig & Session Activation | 🟡 Implemented, not yet run on Linux |
 | 6 | Resident Tray App & Session Manager | ❌ Not Started |
 | 7 | CLI | ❌ Not Started |
 | 8 | Tauri GUI: Main Application | ❌ Not Started |
@@ -93,11 +93,11 @@ Decisions locked in for this roadmap:
 - [x] Unit/integration tests against a mockable Win32 boundary (CI-safe) — 8 tests use a fake Win32 boundary; 1 opt-in real test (`--ignored`) passed
 
 ## Phase 5 — Linux Backend: Fontconfig & Session Activation
-- [ ] Linux user-level permanent install (`~/.local/share/fonts`, targeted `fc-cache` refresh)
-- [ ] Linux user-level uninstall (file removal + fontconfig cache refresh)
+- [x] Linux user-level permanent install (`~/.local/share/fonts`, targeted `fc-cache` refresh) — copies to $XDG_DATA_HOME/fonts with a scoped `fc-cache -f`; tested with a fake runner, not yet on a real Linux desktop
+- [x] Linux user-level uninstall (file removal + fontconfig cache refresh) — refuses paths outside the user directory; fake-runner tested
 - [ ] Fontconfig cache management: inspect cache files, trigger scoped `fc-cache -f` on affected dirs only (avoid full-system rebuild)
-- [ ] Linux session activation: dedicated session font directory + scoped fontconfig `<include>` added/removed by the resident process, cache refresh on activate/deactivate
-- [ ] Session cleanup on resident-process exit/logout (systemd user unit `ExecStop` or signal handler)
+- [x] Linux session activation: dedicated session font directory + scoped fontconfig `<include>` added/removed by the resident process, cache refresh on activate/deactivate — session copies in $XDG_CACHE_HOME/tpt-fonts/session plus a fontconfig drop-in in conf.d; fake-runner tested
+- [ ] Session cleanup on resident-process exit/logout (systemd user unit `ExecStop` or signal handler) — `clear_session()` exists; the systemd unit and signal handler come with Phase 6/12
 - [ ] Verify behavior on X11 and Wayland
 
 ## Phase 6 — Resident Tray App & Session Manager
