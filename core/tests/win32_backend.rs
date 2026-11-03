@@ -92,7 +92,7 @@ fn install_copies_the_font_and_registers_it() {
 
     assert!(installed.path.starts_with(dir.path()));
     assert!(installed.path.is_file());
-    assert_eq!(installed.registry_name, "Arial (TrueType)");
+    assert_eq!(installed.registration, "Arial (TrueType)");
     assert_eq!(fake.registry.borrow().len(), 1);
     assert_eq!(fake.broadcasts(), 1, "one broadcast per install");
 }
@@ -141,7 +141,7 @@ fn uninstall_refuses_files_outside_the_font_directory() {
     let backend = WindowsBackend::new(&fake, dir.path().to_path_buf());
     let bogus = InstalledFont {
         path: victim.clone(),
-        registry_name: "Anything".into(),
+        registration: "Anything".into(),
     };
 
     let err = backend.uninstall(&bogus).expect_err("outside path refused");

@@ -12,8 +12,8 @@ use crate::error::Result;
 pub struct InstalledFont {
     /// Where the font file lives inside the user font directory.
     pub path: PathBuf,
-    /// The registry value name that makes the OS register this font (Windows).
-    pub registry_name: String,
+    /// The OS registration key: the registry value name on Windows, the file name on Linux.
+    pub registration: String,
 }
 
 /// Installs fonts permanently and activates them for the login session.

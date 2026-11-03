@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 
 use crate::backend::{FontBackend, InstalledFont};
 use crate::error::{FontError, Result};
-use crate::format::is_font_extension;
+use crate::format::{is_font_extension, unique_destination};
 use crate::model::{FontFormat, FontSource};
 use crate::parse::read_font_file;
 
@@ -157,24 +157,6 @@ impl<A: Win32Api> WindowsBackend<A> {
         &self.font_dir
     }
 
-    /// A free file name in the font directory, adding " (2)", " (3)" and so on if needed.
-    fn unique_destination(&self, file_name: &std::ffi::OsStr) -> PathBuf {
-        let candidate = self.font_dir.join(file_name);
-        if !candidate.exists() {
-            return candidate;
-        }
-        let path = Path::new(file_name);
-        let stem = path.file_stem().unwrap_or_default().to_string_lossy();
-        let ext = path
-            .extension()
-            .map(|e| format!(".{}", e.to_string_lossy()))
-            .unwrap_or_default();
-        (2..)
-            .map(|n| self.font_dir.join(format!("{stem} ({n}){ext}")))
-            .find(|p| !p.exists())
-            .expect("an unused suffix exists")
-    }
-
     fn ensure_inside_font_dir(&self, path: &Path) -> Result<()> {
         if path.starts_with(&self.font_dir) {
             Ok(())
@@ -217,24 +199,24 @@ impl<A: Win32Api> FontBackend for WindowsBackend<A> {
         } else {
             &face.full_name
         };
-        let registry_name = format!("{display_name} ({kind})");
+        let registration = format!("{display_name} ({kind})");
 
         let registered = self
             .api
             .user_fonts()
             .map_err(|e| Self::io_error(&self.font_dir, e))?;
-        if registered.iter().any(|(name, _)| *name == registry_name) {
-            return Err(FontError::AlreadyInstalled(registry_name));
+        if registered.iter().any(|(name, _)| *name == registration) {
+            return Err(FontError::AlreadyInstalled(registration));
         }
 
         let file_name = source.file_name().ok_or_else(|| FontError::Backend {
             path: source.to_path_buf(),
             reason: "path has no file name".into(),
         })?;
-        let destination = self.unique_destination(file_name);
+        let destination = unique_destination(&self.font_dir, file_name);
         fs::copy(source, &destination).map_err(|e| Self::io_error(&destination, e))?;
 
-        if let Err(err) = self.api.set_user_font(&registry_name, &destination) {
+        if let Err(err) = self.api.set_user_font(&registration, &destination) {
             // Roll back the copy so a failed registration does not leave an orphaned file.
             let _ = fs::remove_file(&destination);
             return Err(Self::io_error(&destination, err));
@@ -243,14 +225,14 @@ impl<A: Win32Api> FontBackend for WindowsBackend<A> {
 
         Ok(InstalledFont {
             path: destination,
-            registry_name,
+            registration,
         })
     }
 
     fn uninstall(&self, font: &InstalledFont) -> Result<()> {
         self.ensure_inside_font_dir(&font.path)?;
         self.api
-            .remove_user_font(&font.registry_name)
+            .remove_user_font(&font.registration)
             .map_err(|e| Self::io_error(&font.path, e))?;
         fs::remove_file(&font.path).map_err(|e| Self::io_error(&font.path, e))?;
         self.api.broadcast_font_change();
@@ -265,10 +247,7 @@ impl<A: Win32Api> FontBackend for WindowsBackend<A> {
         Ok(registered
             .into_iter()
             .filter(|(_, path)| path.starts_with(&self.font_dir))
-            .map(|(registry_name, path)| InstalledFont {
-                path,
-                registry_name,
-            })
+            .map(|(registration, path)| InstalledFont { path, registration })
             .collect())
     }
 

@@ -13,6 +13,7 @@ mod duplicates;
 mod error;
 mod format;
 mod fvar;
+mod linux;
 mod model;
 mod parse;
 mod platform;
@@ -28,6 +29,7 @@ pub use duplicates::{
 };
 pub use error::{FontError, Result};
 pub use format::{detect_format, is_font_extension};
+pub use linux::{CommandOutput, CommandRunner, FontconfigBackend, LinuxPaths, SystemRunner};
 pub use model::{
     EmbeddingRights, FontFace, FontFile, FontFormat, FontSource, NamedInstance, ScanRoot,
     VariationAxis,

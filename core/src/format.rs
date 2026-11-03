@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Copyright (c) 2026 TPT Solutions
 
-use std::path::Path;
+use std::ffi::OsStr;
+use std::path::{Path, PathBuf};
 
 use crate::model::FontFormat;
 
@@ -15,6 +16,26 @@ pub fn detect_format(data: &[u8]) -> Option<FontFormat> {
         b"ttcf" => Some(FontFormat::Ttc),
         _ => None,
     }
+}
+
+/// A path in `dir` for `file_name` that does not exist yet.
+///
+/// Adds " (2)", " (3)" and so on before the extension when the plain name is taken.
+pub(crate) fn unique_destination(dir: &Path, file_name: &OsStr) -> PathBuf {
+    let candidate = dir.join(file_name);
+    if !candidate.exists() {
+        return candidate;
+    }
+    let path = Path::new(file_name);
+    let stem = path.file_stem().unwrap_or_default().to_string_lossy();
+    let ext = path
+        .extension()
+        .map(|e| format!(".{}", e.to_string_lossy()))
+        .unwrap_or_default();
+    (2..)
+        .map(|n| dir.join(format!("{stem} ({n}){ext}")))
+        .find(|p| !p.exists())
+        .expect("an unused suffix exists")
 }
 
 /// Whether a path has an extension the scanner should consider a font candidate.
