@@ -37,7 +37,7 @@ Decisions locked in for this roadmap:
 | 3 | Variable Font Preview Engine | 🟡 Implemented, GUI not yet exercised |
 | 4 | Windows Backend: User-Level Install & Session Activation | 🟡 In Progress (tray wiring pending) |
 | 5 | Linux Backend: Fontconfig & Session Activation | 🟡 Implemented, not yet run on Linux |
-| 6 | Resident Tray App & Session Manager | ❌ Not Started |
+| 6 | Resident Tray App & Session Manager | 🟡 Session core done; tray UI, IPC and autostart not started |
 | 7 | CLI | ❌ Not Started |
 | 8 | Tauri GUI: Main Application | ❌ Not Started |
 | 9 | Archon Support (Design Only) | ❌ Not Started |
@@ -102,10 +102,10 @@ Decisions locked in for this roadmap:
 
 ## Phase 6 — Resident Tray App & Session Manager
 - [ ] Cross-platform tray-app crate (native tray icon, Windows + Linux)
-- [ ] Session font registry: tracks active session fonts, OS handles, activation source
+- [x] Session font registry: tracks active session fonts, OS handles, activation source — `SessionManager` + `SessionRegistry` track fonts, source (GUI/CLI/tray) and timestamps; persisted atomically; 11 tests
 - [ ] Tray menu: quick activate/deactivate list, open main window, quit (clean deactivation on quit)
 - [ ] Optional user-toggleable autostart (Windows Run key/Startup folder, Linux `.desktop` autostart)
-- [ ] Orphaned-resource recovery: detect stale session registrations left by a crash/abnormal exit on next launch and clean them up
+- [x] Orphaned-resource recovery: detect stale session registrations left by a crash/abnormal exit on next launch and clean them up — `recover_orphans` checks the owner PID and deactivates stale fonts; a live owner is left alone
 - [ ] IPC between tray-app resident process and Tauri main window (local socket/named pipe) so the GUI reflects live session state
 
 ## Phase 7 — CLI
