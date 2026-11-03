@@ -38,7 +38,7 @@ Decisions locked in for this roadmap:
 | 4 | Windows Backend: User-Level Install & Session Activation | 🟡 In Progress (tray wiring pending) |
 | 5 | Linux Backend: Fontconfig & Session Activation | 🟡 Implemented, not yet run on Linux |
 | 6 | Resident Tray App & Session Manager | 🟡 Tray runs on Windows; GUI client, Linux and logoff cleanup pending |
-| 7 | CLI | ❌ Not Started |
+| 7 | CLI | 🟡 Implemented; SVG preview only, uninstall not run from the CLI |
 | 8 | Tauri GUI: Main Application | ❌ Not Started |
 | 9 | Archon Support (Design Only) | ❌ Not Started |
 | 10 | Performance & Polish | ❌ Not Started |
@@ -109,13 +109,13 @@ Decisions locked in for this roadmap:
 - [ ] IPC between tray-app resident process and Tauri main window (local socket/named pipe) so the GUI reflects live session state — tray side done: named pipe (local socket on Linux) with one JSON line per request; the GUI client is not yet wired
 
 ## Phase 7 — CLI
-- [ ] `tpt-fonts list` (installed + scanned fonts; filters by family/style/format/state)
-- [ ] `tpt-fonts activate <font> --session` / `tpt-fonts deactivate <font>`
-- [ ] `tpt-fonts install <file> [--user]` / `tpt-fonts uninstall <font>`
-- [ ] `tpt-fonts scan-duplicates [--fix | --dry-run]`
-- [ ] `tpt-fonts preview <font> --axis wght=700 --text "..."` (headless preview/specimen export)
-- [ ] CLI talks to the same `core` engine (and resident process for session state) used by the GUI
-- [ ] CLI unit/integration tests
+- [x] `tpt-fonts list` — filters by family, format, kind (variable or static) and state; `--json` output. There is no separate style filter yet; family and subfamily are both shown
+- [x] `tpt-fonts activate <font> --session` / `tpt-fonts deactivate <font>` — verified against a live tray (activate, list, deactivate)
+- [x] `tpt-fonts install <file> [--user]` / `tpt-fonts uninstall <font>` — per-user only; uninstall from the CLI is not yet exercised
+- [x] `tpt-fonts scan-duplicates [--fix | --dry-run]` — `--fix` only trashes byte-identical copies; metadata matches are report-only
+- [x] `tpt-fonts preview <font> --axis wght=700 --text ...` — writes an SVG of outlines (no rasteriser needed); PNG output is not done
+- [x] CLI talks to the same `core` engine (and resident process for session state) used by the GUI
+- [x] CLI unit/integration tests — 5 end-to-end tests of the binary, plus query and specimen tests in core
 
 ## Phase 8 — Tauri GUI: Main Application
 - [ ] Main window: font catalog list/grid (family grouping, style variants, thumbnail preview)
