@@ -31,7 +31,7 @@ Decisions locked in for this roadmap:
 
 | Phase | Area | Progress |
 |-------|------|----------|
-| 0 | Project Setup & Licensing | ❌ Not Started |
+| 0 | Project Setup & Licensing | 🟡 In Progress (repo hosting pending) |
 | 1 | Core Font Data Model & Scanning Engine | ❌ Not Started |
 | 2 | Duplicate Detection | ❌ Not Started |
 | 3 | Variable Font Preview Engine | ❌ Not Started |
@@ -48,15 +48,15 @@ Decisions locked in for this roadmap:
 ---
 
 ## Phase 0 — Project Setup & Licensing
-- [ ] Init git repo, `.gitignore` (Rust + Node/Tauri targets + Windows build artifacts)
-- [ ] Add `LICENSE-MIT` and `LICENSE-APACHE` (dual license, TPT Solutions copyright)
-- [ ] Add SPDX dual-license header/notice convention for source files
-- [ ] Cargo workspace: `core/` (font engine, OS backends, session manager), `cli/` (scriptable commands), `tray-app/` (resident session-activation host), `src-tauri/` (Tauri backend wrapping core), `src/` (TS/Vite frontend, no framework); shared `[workspace.package]` (`license`, `authors = ["TPT Solutions"]`, `repository`)
-- [ ] `rust-toolchain.toml` (MSRV pin), `rustfmt.toml`, `clippy.toml`
-- [ ] Configure `tauri.conf.json` (app id, window defaults, bundle identifiers for tpt-fonts)
-- [ ] TypeScript config (tsconfig, Vite, no framework)
-- [ ] `README.md` (from spec.txt), build instructions, license badges
-- [ ] Set up CI (GitHub Actions, build+lint+test on Windows + Linux runners)
+- [x] Init git repo, `.gitignore` (Rust + Node/Tauri targets + Windows build artifacts)
+- [x] Add `LICENSE-MIT` and `LICENSE-APACHE` (dual license, TPT Solutions copyright)
+- [x] Add SPDX dual-license header/notice convention for source files
+- [x] Cargo workspace: `core/` (font engine, OS backends, session manager), `cli/` (scriptable commands), `tray-app/` (resident session-activation host), `src-tauri/` (Tauri backend wrapping core), `src/` (TS/Vite frontend, no framework); shared `[workspace.package]` (`license`, `authors = ["TPT Solutions"]`, `repository`)
+- [x] `rust-toolchain.toml` (MSRV pin), `rustfmt.toml`, `clippy.toml`
+- [x] Configure `tauri.conf.json` (app id, window defaults, bundle identifiers for tpt-fonts)
+- [x] TypeScript config (tsconfig, Vite, no framework)
+- [x] `README.md` (from spec.txt), build instructions, license badges
+- [x] Set up CI (GitHub Actions, build+lint+test on Windows + Linux runners) — workflow added in `.github/workflows/ci.yml`; not yet run on GitHub
 - [ ] Repo hosting under `tpt-solutions` GitHub org
 
 ## Phase 1 — Core Font Data Model & Scanning Engine
