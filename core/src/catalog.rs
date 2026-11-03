@@ -74,7 +74,7 @@ impl Catalog {
         if let Some(parent) = path.parent() {
             fs::create_dir_all(parent).map_err(io_err)?;
         }
-        let tmp = path.with_extension("tmp");
+        let tmp = path.with_extension(format!("{}.tmp", std::process::id()));
         fs::write(&tmp, serde_json::to_vec(self)?).map_err(io_err)?;
         fs::rename(&tmp, path).map_err(io_err)
     }

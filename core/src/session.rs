@@ -115,7 +115,9 @@ impl SessionStore {
         if let Some(parent) = self.path.parent() {
             fs::create_dir_all(parent).map_err(io_err)?;
         }
-        let tmp = self.path.with_extension("tmp");
+        let tmp = self
+            .path
+            .with_extension(format!("{}.tmp", std::process::id()));
         fs::write(&tmp, serde_json::to_vec(registry)?).map_err(io_err)?;
         fs::rename(&tmp, &self.path).map_err(io_err)
     }

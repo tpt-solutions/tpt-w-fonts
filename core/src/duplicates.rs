@@ -108,7 +108,7 @@ where
 }
 
 /// The result of resolving one duplicate group.
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Debug, Default, PartialEq, Eq, Serialize)]
 pub struct Resolution {
     /// Files that were (or, in a dry run, would be) sent to the trash.
     pub trashed: Vec<PathBuf>,
@@ -197,6 +197,29 @@ pub fn metadata_diff(left: &FontFile, right: &FontFile) -> Vec<(&'static str, St
         ]);
     }
     rows.into_iter().filter(|(_, l, r)| l != r).collect()
+}
+
+/// Resolves one identical-copies group, identified by its content hash.
+///
+/// `keep` must be one of the group's files. Metadata groups are not resolved this way, because
+/// their members can differ in content. With `dry_run`, nothing is trashed.
+pub fn resolve_exact_group(
+    catalog: &Catalog,
+    key: &str,
+    keep: &Path,
+    dry_run: bool,
+) -> Result<Resolution> {
+    let group = find_duplicates(catalog)
+        .into_iter()
+        .find(|g| g.kind == DuplicateKind::ExactContent && g.key == key)
+        .ok_or_else(|| crate::FontError::NotFound(key.to_string()))?;
+    if !group.members.iter().any(|m| m == keep) {
+        return Err(crate::FontError::Usage(format!(
+            "{} is not one of the files in this group",
+            keep.display()
+        )));
+    }
+    keep_one(catalog, &group, keep, dry_run)
 }
 
 #[cfg(test)]
@@ -359,6 +382,62 @@ mod tests {
 
         assert_eq!(plan.trashed, vec![PathBuf::from("u/Foo-copy.ttf")]);
         assert_eq!(plan.skipped_system, vec![PathBuf::from("sys/Foo.ttf")]);
+    }
+
+    #[test]
+    fn resolve_exact_group_rejects_a_keep_outside_the_group() {
+        let c = catalog(vec![
+            file(
+                "u/Foo.ttf",
+                "h1",
+                FontSource::User,
+                vec![face("Foo", "1", None)],
+            ),
+            file(
+                "u/Copy.ttf",
+                "h1",
+                FontSource::User,
+                vec![face("Foo", "1", None)],
+            ),
+            file(
+                "u/Other.ttf",
+                "h9",
+                FontSource::User,
+                vec![face("Bar", "1", None)],
+            ),
+        ]);
+        let err = resolve_exact_group(&c, "h1", Path::new("u/Other.ttf"), true)
+            .expect_err("not a member");
+        assert!(matches!(err, crate::FontError::Usage(_)));
+    }
+
+    #[test]
+    fn resolve_exact_group_dry_run_plans_the_other_copies() {
+        let c = catalog(vec![
+            file(
+                "u/Foo.ttf",
+                "h1",
+                FontSource::User,
+                vec![face("Foo", "1", None)],
+            ),
+            file(
+                "u/Copy.ttf",
+                "h1",
+                FontSource::User,
+                vec![face("Foo", "1", None)],
+            ),
+        ]);
+        let plan = resolve_exact_group(&c, "h1", Path::new("u/Foo.ttf"), true).expect("plan");
+        assert_eq!(plan.trashed, vec![PathBuf::from("u/Copy.ttf")]);
+    }
+
+    #[test]
+    fn resolve_exact_group_ignores_unknown_keys() {
+        let c = catalog(vec![]);
+        assert!(matches!(
+            resolve_exact_group(&c, "nope", Path::new("x"), true),
+            Err(crate::FontError::NotFound(_))
+        ));
     }
 
     #[test]

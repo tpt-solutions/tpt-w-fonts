@@ -36,6 +36,7 @@ pub use backend::{FontBackend, InstalledFont};
 pub use catalog::{Catalog, RefreshReport, load_default_catalog};
 pub use duplicates::{
     DuplicateGroup, DuplicateKind, Resolution, find_duplicates, keep_one, metadata_diff,
+    resolve_exact_group,
 };
 pub use error::{FontError, Result};
 pub use format::{detect_format, is_font_extension};

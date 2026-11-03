@@ -9,7 +9,7 @@ use std::path::PathBuf;
 use serde::Serialize;
 
 use crate::catalog::Catalog;
-use crate::model::{FontFormat, FontSource};
+use crate::model::{EmbeddingRights, FontFormat, FontSource};
 
 /// Whether a font is permanently installed, active in this session, or only scanned.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -34,6 +34,10 @@ pub struct FontRow {
     pub full_name: String,
     pub is_variable: bool,
     pub faces: usize,
+    pub version: String,
+    pub vendor_id: Option<String>,
+    pub embedding: EmbeddingRights,
+    pub units_per_em: u16,
 }
 
 /// Builds the library rows, sorted by family then subfamily.
@@ -63,6 +67,10 @@ pub fn build_rows(catalog: &Catalog, session: &[PathBuf], installed: &[PathBuf])
                 full_name: first.map(|f| f.full_name.clone()).unwrap_or_default(),
                 is_variable: first.is_some_and(|f| f.is_variable),
                 faces: file.faces.len(),
+                version: first.map(|f| f.version.clone()).unwrap_or_default(),
+                vendor_id: first.and_then(|f| f.vendor_id.clone()),
+                embedding: first.map_or(EmbeddingRights::Unspecified, |f| f.embedding),
+                units_per_em: first.map_or(0, |f| f.units_per_em),
             }
         })
         .collect();
