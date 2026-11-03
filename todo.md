@@ -39,7 +39,7 @@ Decisions locked in for this roadmap:
 | 5 | Linux Backend: Fontconfig & Session Activation | 🟡 Implemented, not yet run on Linux |
 | 6 | Resident Tray App & Session Manager | 🟡 Tray runs on Windows; GUI client, Linux and logoff cleanup pending |
 | 7 | CLI | 🟡 Implemented; SVG preview only, uninstall not run from the CLI |
-| 8 | Tauri GUI: Main Application | ❌ Not Started |
+| 8 | Tauri GUI: Main Application | 🟡 Library, preview and settings run; detail, duplicates and tray views are partial |
 | 9 | Archon Support (Design Only) | ❌ Not Started |
 | 10 | Performance & Polish | ❌ Not Started |
 | 11 | Testing & QA | ❌ Not Started |
@@ -118,14 +118,14 @@ Decisions locked in for this roadmap:
 - [x] CLI unit/integration tests — 5 end-to-end tests of the binary, plus query and specimen tests in core
 
 ## Phase 8 — Tauri GUI: Main Application
-- [ ] Main window: font catalog list/grid (family grouping, style variants, thumbnail preview)
-- [ ] Search/filter (family name, format, variable vs static, installed/session/available state)
-- [ ] Font detail panel: metadata, embedding rights (`fsType`), install/activate/session actions
-- [ ] Duplicate resolution view (Phase 2)
-- [ ] Variable font preview view (Phase 3)
-- [ ] Session status indicator: active session fonts, quick deactivate
-- [ ] Settings: autostart toggle, scan-directory configuration, light/dark theme
-- [ ] Drag-and-drop font file import
+- [ ] Main window: font catalog list/grid — list view with state, family, style, format and path, sorted by family; family grouping and thumbnails are still open
+- [ ] Search/filter — text search and state filter work; format and variable/static filters are only in the CLI so far
+- [ ] Font detail panel — action bar with activate, deactivate, install, uninstall and preview; metadata such as embedding rights (fsType) is not shown yet
+- [ ] Duplicate resolution view — read-only groups from the core; resolving (keep one, trash the rest) is not exposed to the GUI yet
+- [x] Variable font preview view — opened from the library Preview action or the Preview tab (built in Phase 3)
+- [ ] Session status indicator — shows whether the tray is running, with a Start button; the list of active fonts and quick deactivate are not in the header yet
+- [ ] Settings: autostart toggle, scan-directory configuration, light/dark theme — autostart and theme are in; scan-directory configuration is not
+- [ ] Drag-and-drop font file import — drop handler installs dropped fonts; verified by code review only, not by dragging a file
 
 ## Phase 9 — Archon Support (Design Only)
 - [ ] `docs/archon-design.md`: design for memory-mapped, read-only, page-cache-backed shared font objects; `trait ArchonFontBackend` so apps bind to font capabilities without duplicating font data in RAM
