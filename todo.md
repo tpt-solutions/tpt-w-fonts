@@ -40,7 +40,7 @@ Decisions locked in for this roadmap:
 | 6 | Resident Tray App & Session Manager | 🟡 Tray runs on Windows; GUI client, Linux and logoff cleanup pending |
 | 7 | CLI | 🟡 Implemented; SVG preview only, uninstall not run from the CLI |
 | 8 | Tauri GUI: Main Application | 🟡 Library, detail, preview, duplicates and settings run; grouping, thumbnails and scan directories open |
-| 9 | Archon Support (Design Only) | ❌ Not Started |
+| 9 | Archon Support (Design Only) | 🟡 Design draft written; open questions await the tpt-archon team |
 | 10 | Performance & Polish | ❌ Not Started |
 | 11 | Testing & QA | ❌ Not Started |
 | 12 | Release v1 | ❌ Not Started |
@@ -128,9 +128,9 @@ Decisions locked in for this roadmap:
 - [ ] Drag-and-drop font file import — drop handler installs dropped fonts; verified by code review only, not by dragging a file
 
 ## Phase 9 — Archon Support (Design Only)
-- [ ] `docs/archon-design.md`: design for memory-mapped, read-only, page-cache-backed shared font objects; `trait ArchonFontBackend` so apps bind to font capabilities without duplicating font data in RAM
-- [ ] Open Questions (pending tpt-archon team): mmap/shared-object syscall interface, capability grant/revocation model for font handles, per-app binding performance targets, interaction with session-scoped activation model
-- [ ] Post-v1 `archon` Cargo feature flag plan (`ArchonFontBackend` stub, `is_available() -> false`, `Unsupported` errors until implemented)
+- [x] `docs/archon-design.md` — written as a design draft with a sketched trait. Based on the tpt-archon project page only: the raw README and source paths returned 404, so the trait names are placeholders
+- [ ] Open Questions — nine questions are listed in docs/archon-design.md section 8, for the tpt-archon team to answer
+- [x] Post-v1 `archon` Cargo feature flag plan — written as section 5 of the design doc; no code is added in v1
 
 ## Phase 10 — Performance & Polish
 - [ ] Cold-start/catalog-load optimization targeting the spec's 10,000-installed-fonts scenario
