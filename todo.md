@@ -35,7 +35,7 @@ Decisions locked in for this roadmap:
 | 1 | Core Font Data Model & Scanning Engine | 🟡 In Progress |
 | 2 | Duplicate Detection | 🟡 In Progress (UI pending) |
 | 3 | Variable Font Preview Engine | 🟡 Implemented, GUI not yet exercised |
-| 4 | Windows Backend: User-Level Install & Session Activation | ❌ Not Started |
+| 4 | Windows Backend: User-Level Install & Session Activation | 🟡 In Progress (tray wiring pending) |
 | 5 | Linux Backend: Fontconfig & Session Activation | ❌ Not Started |
 | 6 | Resident Tray App & Session Manager | ❌ Not Started |
 | 7 | CLI | ❌ Not Started |
@@ -84,13 +84,13 @@ Decisions locked in for this roadmap:
 - [x] Specimen/waterfall view (sample text rendered at multiple sizes) — waterfall sizes shared with the core constant
 
 ## Phase 4 — Windows Backend: User-Level Install & Session Activation
-- [ ] Shared `trait FontBackend` (install/uninstall/activate-session/deactivate-session/list) implemented per OS
-- [ ] Windows user-level permanent install (per-user font install API, Windows 10 1809+, no elevation, `HKCU` registration)
-- [ ] Windows user-level uninstall (registry cleanup + file removal)
-- [ ] Windows session activation: `AddFontResourceEx` (shared, non-private flag) for system-wide-during-session visibility, tracked by the resident tray process
+- [x] Shared `trait FontBackend` (install/uninstall/activate-session/deactivate-session/list) implemented per OS
+- [x] Windows user-level permanent install (per-user font install API, Windows 10 1809+, no elevation, `HKCU` registration) — copies to %LOCALAPPDATA%\Microsoft\Windows\Fonts and registers under HKCU; verified with a real round trip
+- [x] Windows user-level uninstall (registry cleanup + file removal) — refuses paths outside the user font folder
+- [x] Windows session activation: `AddFontResourceEx` (shared, non-private flag) for system-wide-during-session visibility, tracked by the resident tray process — shared scope (flags 0), batched per call
 - [ ] Session cleanup: `RemoveFontResourceEx` + `WM_FONTCHANGE` broadcast on tray app exit; handle abnormal-exit/logoff cleanup
-- [ ] Avoid unnecessary GDI font-cache rebuild churn when activating/deactivating
-- [ ] Unit/integration tests against a mockable Win32 boundary (CI-safe)
+- [x] Avoid unnecessary GDI font-cache rebuild churn when activating/deactivating — one WM_FONTCHANGE per batch, and none if nothing changed
+- [x] Unit/integration tests against a mockable Win32 boundary (CI-safe) — 8 tests use a fake Win32 boundary; 1 opt-in real test (`--ignored`) passed
 
 ## Phase 5 — Linux Backend: Fontconfig & Session Activation
 - [ ] Linux user-level permanent install (`~/.local/share/fonts`, targeted `fc-cache` refresh)
