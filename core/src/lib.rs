@@ -18,6 +18,7 @@ mod ipc;
 mod ipc_client;
 mod library;
 mod linux;
+mod logging;
 mod model;
 mod parse;
 mod platform;
@@ -46,6 +47,7 @@ pub use ipc::{
 pub use ipc_client::send as send_request;
 pub use library::{FontRow, FontState, build_rows};
 pub use linux::{CommandOutput, CommandRunner, FontconfigBackend, LinuxPaths, SystemRunner};
+pub use logging::{Level, default_log_path, record, record_error, record_to};
 pub use model::{
     EmbeddingRights, FontFace, FontFile, FontFormat, FontSource, NamedInstance, ScanRoot,
     VariationAxis,
