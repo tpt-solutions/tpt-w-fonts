@@ -45,6 +45,14 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
+      # src-tauri is a workspace member, so its build script runs under the workspace-wide
+      # clippy and test steps. It needs dist/ (frontendDist) and the sidecar binaries to exist.
+      - name: Build frontend
+        run: npm run build
+
+      - name: Prepare sidecar binaries
+        run: node scripts/prepare-sidecars.mjs
+
       - name: Check formatting
         run: cargo fmt --all --check
 
@@ -53,6 +61,3 @@ jobs:
 
       - name: Test
         run: cargo test --workspace
-
-      - name: Build frontend
-        run: npm run build
