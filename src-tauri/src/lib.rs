@@ -173,6 +173,25 @@ fn tray_exe() -> Result<PathBuf, String> {
     Ok(dir.join(name))
 }
 
+/// The TPT Solutions tools page, linked from the footer.
+const TOOLS_URL: &str = "https://tptsolutions.co.nz/tools";
+
+/// Opens the tools page in the default browser. The URL is fixed here, so the webview cannot
+/// use this command to open anything else.
+#[tauri::command]
+fn open_tools_page() -> Result<(), String> {
+    let spawned = if cfg!(windows) {
+        Command::new("explorer").arg(TOOLS_URL).spawn()
+    } else if cfg!(target_os = "macos") {
+        Command::new("open").arg(TOOLS_URL).spawn()
+    } else {
+        Command::new("xdg-open").arg(TOOLS_URL).spawn()
+    };
+    spawned
+        .map(|_| ())
+        .map_err(|e| format!("could not open the browser: {e}"))
+}
+
 /// Opens a preview for one face of a font file.
 ///
 /// The file is also added to the asset-protocol scope so the webview can load it through the
@@ -262,6 +281,7 @@ pub fn run() {
             autostart_get,
             autostart_set,
             tray_start,
+            open_tools_page,
             open_preview,
             preview_set_axis,
             preview_reset_axes,

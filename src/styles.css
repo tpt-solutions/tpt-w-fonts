@@ -172,6 +172,23 @@ select:disabled {
 
 /* ---- Application shell ---------------------------------------------------- */
 
+.app-footer {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 0.8rem;
+}
+
+.app-footer a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.app-footer a:hover,
+.app-footer a:focus-visible {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
 header {
   display: flex;
   flex-wrap: wrap;

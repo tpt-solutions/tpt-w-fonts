@@ -99,6 +99,7 @@ export const api = {
   autostartGet: () => invoke<boolean>("autostart_get"),
   autostartSet: (enabled: boolean) => invoke<void>("autostart_set", { enabled }),
   trayStart: () => invoke<void>("tray_start"),
+  openToolsPage: () => invoke<void>("open_tools_page"),
 
   openPreview: (path: string, faceIndex: number) =>
     invoke<PreviewState>("open_preview", { path, faceIndex }),

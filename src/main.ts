@@ -102,7 +102,20 @@ if (root) {
   const onboarding = createOnboardingPanel();
   onboarding.element.hidden = !onboarding.visible;
   main.prepend(onboarding.element);
-  root.append(header, dropStatus.element, main);
+  root.append(header, dropStatus.element, main, footer());
+
+  /** A quiet footer link. It opens in the browser rather than navigating the app window. */
+  function footer(): HTMLElement {
+    const link = el("a", "", "TPT Solutions tools");
+    link.href = "https://tptsolutions.co.nz/tools";
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+      api.openToolsPage().catch((err: unknown) => dropStatus.show(errorMessage(err)));
+    });
+    const element = el("footer", "app-footer");
+    element.append(link);
+    return element;
+  }
 
   function showTab(tab: Tab): void {
     for (const [name, panel] of Object.entries(panels) as [Tab, HTMLElement][]) {
