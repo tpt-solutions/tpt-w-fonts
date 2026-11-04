@@ -7,6 +7,7 @@ import { createDuplicatesPanel } from "./duplicates";
 import { createLibraryPanel } from "./library";
 import { createPreviewPanel } from "./preview";
 import { createSettingsPanel } from "./settings";
+import { createOnboardingPanel } from "./onboarding";
 import { api, errorMessage } from "./api";
 import { button, el, statusLine } from "./dom";
 
@@ -93,6 +94,10 @@ if (root) {
     main.append(panels[tab]);
   }
   main.insertBefore(previewEntry, panels.preview);
+
+  const onboarding = createOnboardingPanel();
+  onboarding.element.hidden = !onboarding.visible;
+  main.prepend(onboarding.element);
   root.append(header, dropStatus.element, main);
 
   function showTab(tab: Tab): void {

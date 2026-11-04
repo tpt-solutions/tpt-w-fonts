@@ -356,3 +356,12 @@ button.danger {
   top: 0;
   background: var(--panel);
 }
+
+.onboarding {
+  border-color: var(--accent);
+}
+
+.onboarding h2 {
+  margin-top: 0;
+  font-size: 1.05rem;
+}
