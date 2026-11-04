@@ -34,11 +34,11 @@ pub fn spawn(listener: interprocess::local_socket::Listener, proxy: EventLoopPro
                     let proxy = proxy.clone();
                     thread::spawn(move || {
                         if let Err(err) = serve(stream, &proxy) {
-                            eprintln!("tpt-fonts-tray: IPC client error: {err}");
+                            report!("tpt-fonts-tray: IPC client error: {err}");
                         }
                     });
                 }
-                Err(err) => eprintln!("tpt-fonts-tray: IPC accept failed: {err}"),
+                Err(err) => report!("tpt-fonts-tray: IPC accept failed: {err}"),
             }
         }
     });

@@ -5,7 +5,8 @@
 
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::mpsc::Sender;
+use std::sync::mpsc::{self, Sender};
+use std::time::Duration;
 
 use tpt_fonts_core::{
     Request, Response, SessionManager, autostart_enabled, handle_request, set_autostart,
@@ -26,6 +27,8 @@ pub enum UserEvent {
     Ipc(Request, Sender<Response>),
     /// A menu item was chosen.
     Menu(MenuId),
+    /// Windows is ending the session. Deactivate everything, then reply.
+    SessionEnd(Sender<()>),
 }
 
 /// What a menu item does when chosen.
@@ -56,6 +59,20 @@ pub fn run(
     MenuEvent::set_event_handler(Some(move |event: MenuEvent| {
         let _ = menu_proxy.send_event(UserEvent::Menu(event.id));
     }));
+    #[cfg(windows)]
+    {
+        let session_proxy = proxy.clone();
+        crate::logoff::watch(move || {
+            let (reply_tx, reply_rx) = mpsc::channel();
+            if session_proxy
+                .send_event(UserEvent::SessionEnd(reply_tx))
+                .is_ok()
+            {
+                // Bounded wait: Windows gives a session-ending process only a few seconds.
+                let _ = reply_rx.recv_timeout(Duration::from_secs(5));
+            }
+        });
+    }
     ipc_server::spawn(listener, proxy);
 
     let exe = std::env::current_exe()?;
@@ -124,24 +141,24 @@ impl App {
         match action {
             Action::Deactivate(path) => {
                 if let Err(err) = self.manager.deactivate(&path) {
-                    eprintln!("tpt-fonts-tray: {err}");
+                    report!("tpt-fonts-tray: {err}");
                 }
             }
             Action::DeactivateAll => {
                 if let Err(err) = self.manager.deactivate_all() {
-                    eprintln!("tpt-fonts-tray: {err}");
+                    report!("tpt-fonts-tray: {err}");
                 }
             }
             Action::ToggleAutostart => {
                 let enable = !autostart_enabled();
                 if let Err(err) = set_autostart(enable, &self.exe) {
-                    eprintln!("tpt-fonts-tray: could not change autostart: {err}");
+                    report!("tpt-fonts-tray: could not change autostart: {err}");
                 }
             }
             Action::Quit => {
                 // Clean deactivation on quit: the session should not outlive the tray.
                 if let Err(err) = self.manager.deactivate_all() {
-                    eprintln!("tpt-fonts-tray: {err}");
+                    report!("tpt-fonts-tray: {err}");
                 }
                 event_loop.exit();
                 return;
@@ -164,7 +181,7 @@ impl ApplicationHandler<UserEvent> for App {
             .build()
         {
             Ok(tray) => self.tray = Some(tray),
-            Err(err) => eprintln!("tpt-fonts-tray: could not create the tray icon: {err}"),
+            Err(err) => report!("tpt-fonts-tray: could not create the tray icon: {err}"),
         }
     }
 
@@ -180,6 +197,12 @@ impl ApplicationHandler<UserEvent> for App {
                 self.refresh_menu();
             }
             UserEvent::Menu(id) => self.on_menu(event_loop, id),
+            UserEvent::SessionEnd(reply) => {
+                if let Err(err) = self.manager.deactivate_all() {
+                    report!("tpt-fonts-tray: session end cleanup: {err}");
+                }
+                let _ = reply.send(());
+            }
         }
     }
 }
@@ -187,7 +210,7 @@ impl ApplicationHandler<UserEvent> for App {
 /// `muda` menus take items by reference; this keeps the call sites short.
 fn append(menu: &Menu, item: &dyn tray_icon::menu::IsMenuItem) {
     if let Err(err) = menu.append(item) {
-        eprintln!("tpt-fonts-tray: could not add a menu item: {err}");
+        report!("tpt-fonts-tray: could not add a menu item: {err}");
     }
 }
 
