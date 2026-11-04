@@ -19,7 +19,7 @@ path = "src/main.rs"
 interprocess = "2.4.7"
 serde_json = "1.0.154"
 tpt-fonts-core = { path = "../core" }
-tray-icon = "0.24.2"
+tray-icon = "0.26"
 winit = "0.30.13"
 
 [dev-dependencies]

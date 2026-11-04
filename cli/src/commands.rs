@@ -109,21 +109,21 @@ fn list(
     let mut rows: Vec<(&FontFile, State, usize)> = Vec::new();
     for file in catalog.files() {
         let file_state = state_of(&file.path, &session, &installed);
-        if let Some(wanted) = state {
-            if !matches_state(wanted, file_state) {
-                continue;
-            }
+        if let Some(wanted) = state
+            && !matches_state(wanted, file_state)
+        {
+            continue;
         }
-        if let Some(wanted) = format {
-            if file.format != to_format(wanted) {
-                continue;
-            }
+        if let Some(wanted) = format
+            && file.format != to_format(wanted)
+        {
+            continue;
         }
         for face in &file.faces {
-            if let Some(text) = &family {
-                if !face.family.to_lowercase().contains(&text.to_lowercase()) {
-                    continue;
-                }
+            if let Some(text) = &family
+                && !face.family.to_lowercase().contains(&text.to_lowercase())
+            {
+                continue;
             }
             if let Some(wanted) = kind {
                 let variable = matches!(wanted, KindArg::Variable);
