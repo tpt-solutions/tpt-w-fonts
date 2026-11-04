@@ -152,7 +152,7 @@ pub fn load_default_catalog() -> Result<(Catalog, RefreshReport)> {
     })?;
     let cache = dir.join("catalog.json");
     let mut catalog = Catalog::load(&cache);
-    let report = catalog.refresh(&crate::platform::default_scan_roots());
+    let report = catalog.refresh(&crate::scan_dirs::scan_roots());
     catalog.save(&cache)?;
     Ok((catalog, report))
 }

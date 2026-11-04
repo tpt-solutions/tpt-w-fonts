@@ -24,6 +24,7 @@ mod parse;
 mod platform;
 mod preview;
 mod query;
+mod scan_dirs;
 mod session;
 mod specimen;
 mod watch;
@@ -61,6 +62,9 @@ pub use preview::{
     AxisValue, Background, DEFAULT_SAMPLE_TEXT, PreviewState, SavedInstance, WATERFALL_SIZES,
 };
 pub use query::{find_matches, resolve};
+pub use scan_dirs::{
+    ScanDirSettings, add_scan_dir, remove_scan_dir, scan_dir_settings, scan_roots,
+};
 pub use session::{
     ActivationSource, ActiveFont, Recovery, SessionManager, SessionRegistry, SessionStore,
     recover_orphans, recover_orphans_with,
