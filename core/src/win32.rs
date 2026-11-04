@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 
 use crate::backend::{FontBackend, InstalledFont};
 use crate::error::{FontError, Result};
-use crate::format::{is_font_extension, unique_destination};
+use crate::format::{is_font_extension, is_within, unique_destination};
 use crate::model::{FontFormat, FontSource};
 use crate::parse::read_font_file;
 
@@ -158,7 +158,7 @@ impl<A: Win32Api> WindowsBackend<A> {
     }
 
     fn ensure_inside_font_dir(&self, path: &Path) -> Result<()> {
-        if path.starts_with(&self.font_dir) {
+        if is_within(path, &self.font_dir) {
             Ok(())
         } else {
             Err(FontError::OutsideFontDirectory {

@@ -18,7 +18,7 @@ use std::process::Command;
 
 use crate::backend::{FontBackend, InstalledFont};
 use crate::error::{FontError, Result};
-use crate::format::{is_font_extension, unique_destination};
+use crate::format::{is_font_extension, is_within, unique_destination};
 use crate::model::FontSource;
 use crate::parse::read_font_file;
 
@@ -150,7 +150,7 @@ impl<R: CommandRunner> FontconfigBackend<R> {
     }
 
     fn ensure_inside_user_dir(&self, path: &Path) -> Result<()> {
-        if path.starts_with(&self.paths.user_fonts) {
+        if is_within(path, &self.paths.user_fonts) {
             Ok(())
         } else {
             Err(FontError::OutsideFontDirectory {

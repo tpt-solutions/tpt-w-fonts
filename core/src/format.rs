@@ -38,6 +38,30 @@ pub(crate) fn unique_destination(dir: &Path, file_name: &OsStr) -> PathBuf {
         .expect("an unused suffix exists")
 }
 
+/// Whether `path` resolves to a location inside `dir`.
+///
+/// Both sides are canonicalised, so `..` segments and symlinks that leave `dir` are caught.
+/// A file that no longer exists is checked through its parent folder, so uninstalling an
+/// already-deleted font still works. Returns `false` when `dir` itself cannot be resolved.
+pub(crate) fn is_within(path: &Path, dir: &Path) -> bool {
+    let Ok(dir) = dir.canonicalize() else {
+        return false;
+    };
+    let resolved = match path.canonicalize() {
+        Ok(resolved) => resolved,
+        Err(_) => {
+            let (Some(parent), Some(name)) = (path.parent(), path.file_name()) else {
+                return false;
+            };
+            match parent.canonicalize() {
+                Ok(parent) => parent.join(name),
+                Err(_) => return false,
+            }
+        }
+    };
+    resolved.starts_with(&dir)
+}
+
 /// Whether a path has an extension the scanner should consider a font candidate.
 pub fn is_font_extension(path: &Path) -> bool {
     path.extension()
@@ -52,6 +76,7 @@ pub fn is_font_extension(path: &Path) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
 
     #[test]
     fn detects_truetype_by_version_tag() {
@@ -77,6 +102,31 @@ mod tests {
     fn rejects_unknown_and_short_input() {
         assert_eq!(detect_format(b"%PDF-1.7"), None);
         assert_eq!(detect_format(&[0, 1]), None);
+    }
+
+    #[test]
+    fn is_within_accepts_files_inside_the_folder() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let inside = dir.path().join("Inside.ttf");
+        fs::write(&inside, b"x").expect("write");
+        let missing = dir.path().join("gone.ttf");
+
+        assert!(is_within(&inside, dir.path()));
+        assert!(is_within(&missing, dir.path()), "deleted files check via the parent");
+    }
+
+    #[test]
+    fn is_within_rejects_dot_dot_escapes() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let font_dir = dir.path().join("fonts");
+        fs::create_dir_all(&font_dir).expect("mkdir");
+        let outside = dir.path().join("outside.ttf");
+        fs::write(&outside, b"x").expect("write");
+
+        let escape = font_dir.join("..").join("outside.ttf");
+        assert!(!is_within(&escape, &font_dir));
+        let missing_escape = font_dir.join("..").join("gone.ttf");
+        assert!(!is_within(&missing_escape, &font_dir));
     }
 
     #[test]
