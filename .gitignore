@@ -44,3 +44,6 @@ Thumbs.db
 *.ilk
 *.exp
 *.lib
+
+# Sidecar copies made by scripts/prepare-sidecars.mjs
+src-tauri/binaries/

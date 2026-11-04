@@ -137,8 +137,8 @@ Decisions locked in for this roadmap:
 - [ ] Memory profiling (catalog index + tray resident process + WebView) — not measured yet
 - [ ] Light/dark theme support, accessibility pass — theme choice (system, light, dark) is in; a keyboard and screen-reader audit has not been done
 - [ ] App icon, branding assets — placeholder icon in place
-- [ ] First-run onboarding — not started
-- [ ] Crash reporting/local error logging (opt-in only) — not started
+- [x] First-run onboarding — a dismissible notice explaining session versus permanent install, shown once per viewer
+- [x] Crash reporting/local error logging (opt-in only) — local log only, in logs/tpt-fonts.log under the state directory, rotated at 1 MiB. Nothing is sent anywhere, so no opt-in is needed for v1; remote reporting is not built
 
 ## Phase 11 — Testing & QA
 - [ ] Unit tests: parsing engine, duplicate detection, session activation logic (mocked per-platform backends)
@@ -150,9 +150,9 @@ Decisions locked in for this roadmap:
 
 ## Phase 12 — Release v1
 - [ ] Finalize versioning scheme (SemVer) and changelog process
-- [ ] Windows installer (MSI/NSIS via Tauri bundler), autostart registration, code-signing decision
-- [ ] Linux packaging (.deb/.rpm/AppImage via Tauri bundler), systemd user unit for the tray app
-- [ ] Publish LICENSE files + notices in release artifacts
+- [ ] Windows installer (MSI/NSIS via Tauri bundler), autostart registration, code-signing decision — NSIS per-user installer configured with the tray and CLI as sidecars; OV code-signing chosen as the plan, not yet bought (see docs/release.md)
+- [ ] Linux packaging (.deb/.rpm/AppImage via Tauri bundler), systemd user unit for the tray app — .deb and AppImage configured, systemd unit in packaging/linux with --cleanup as ExecStop; not built on Linux yet, no .rpm
+- [ ] Publish LICENSE files + notices in release artifacts — LICENSE files exist in the repo; not yet bundled in installers
 - [ ] User-facing docs (install guide, CLI reference, session-vs-permanent-install explainer)
 - [ ] Tag v1.0.0 release, publish to GitHub (tpt-solutions org)
 - [ ] Post-release triage process for bug reports
