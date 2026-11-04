@@ -39,7 +39,7 @@ Decisions locked in for this roadmap:
 | 5 | Linux Backend: Fontconfig & Session Activation | 🟡 Implemented, not yet run on Linux |
 | 6 | Resident Tray App & Session Manager | 🟡 Tray runs on Windows; GUI client, Linux and logoff cleanup pending |
 | 7 | CLI | 🟡 Implemented; SVG preview only, uninstall not run from the CLI |
-| 8 | Tauri GUI: Main Application | 🟡 Library, detail, preview, duplicates and settings run; grouping, thumbnails and scan directories open |
+| 8 | Tauri GUI: Main Application | 🟡 Library, detail, preview, duplicates and settings run; grouping and thumbnails open |
 | 9 | Archon Support (Design Only) | 🟡 Design draft written; open questions await the tpt-archon team |
 | 10 | Performance & Polish | 🟡 Scale measured on 10,000 fonts; polish not started |
 | 11 | Testing & QA | ❌ Not Started |
@@ -88,7 +88,7 @@ Decisions locked in for this roadmap:
 - [x] Windows user-level permanent install (per-user font install API, Windows 10 1809+, no elevation, `HKCU` registration) — copies to %LOCALAPPDATA%\Microsoft\Windows\Fonts and registers under HKCU; verified with a real round trip
 - [x] Windows user-level uninstall (registry cleanup + file removal) — refuses paths outside the user font folder
 - [x] Windows session activation: `AddFontResourceEx` (shared, non-private flag) for system-wide-during-session visibility, tracked by the resident tray process — shared scope (flags 0), batched per call
-- [ ] Session cleanup: `RemoveFontResourceEx` + `WM_FONTCHANGE` broadcast on tray app exit; handle abnormal-exit/logoff cleanup
+- [ ] Session cleanup: `RemoveFontResourceEx` + `WM_FONTCHANGE` broadcast on tray app exit; handle abnormal-exit/logoff cleanup — Quit calls `deactivate_all` and a hidden window handles `WM_ENDSESSION`; abnormal exit verified live (tray killed with a session font active, `--cleanup` deactivated it and removed the state file). Not yet exercised: menu Quit and a real logoff
 - [x] Avoid unnecessary GDI font-cache rebuild churn when activating/deactivating — one WM_FONTCHANGE per batch, and none if nothing changed
 - [x] Unit/integration tests against a mockable Win32 boundary (CI-safe) — 8 tests use a fake Win32 boundary; 1 opt-in real test (`--ignored`) passed
 
@@ -124,7 +124,7 @@ Decisions locked in for this roadmap:
 - [x] Duplicate resolution view — identical copies can be resolved: keep one, review the dry-run plan, then confirm to trash the rest. Same-metadata groups stay report-only. The trash path is covered by a dry-run test only; it has not been run on real duplicates
 - [x] Variable font preview view — opened from the library Preview action or the Preview tab (built in Phase 3)
 - [x] Session status indicator — header shows the number of session fonts, a Deactivate all button, and the tray state with a Start button. A per-font list is in the library filter, not the header
-- [ ] Settings: autostart toggle, scan-directory configuration, light/dark theme — autostart and theme are in; scan-directory configuration is not
+- [x] Settings: autostart toggle, scan-directory configuration, light/dark theme — autostart and theme were already in; scan folders can now be added and removed in Settings, stored per user, and the library watcher rebuilds for the new set. Overlapping or relative folders are refused. Not yet run in a live window, and there is no folder picker (the path is typed or pasted)
 - [ ] Drag-and-drop font file import — drop handler installs dropped fonts; verified by code review only, not by dragging a file
 
 ## Phase 9 — Archon Support (Design Only)
@@ -146,13 +146,13 @@ Decisions locked in for this roadmap:
 - [ ] Manual QA: Windows 10/11
 - [ ] Manual QA: Linux (X11 + Wayland, at least one major distro)
 - [ ] Stress test: 10,000 scanned/installed fonts — catalog load time, search responsiveness, RAM usage
-- [ ] Security review: malformed/malicious font file parsing (fuzzing) — mutation fuzzing done (core/tests/fuzz_parse.rs; 20,000 iterations pass in debug and release); parser panics are caught and reported as errors. Still open: path traversal review of scan directories, and an IPC boundary review (tray and CLI and GUI)
+- [ ] Security review: malformed/malicious font file parsing (fuzzing) — mutation fuzzing done (core/tests/fuzz_parse.rs; 20,000 iterations pass in debug and release); parser panics are caught and reported as errors. Scan-directory traversal and IPC boundary reviewed by reading the code: scanning uses `follow_links(false)`; uninstall only acts on paths the backend lists itself; the tray caps request size at 64 KiB and activation rejects non-font paths. Containment checks in `win32.rs` and `linux.rs` now canonicalise both sides (`format::is_within`), with tests for `..` escapes and deleted files. Open: the named-pipe ACL on Windows has not been confirmed
 
 ## Phase 12 — Release v1
 - [x] Finalize versioning scheme (SemVer) and changelog process — policy and CHANGELOG.md in place (Keep a Changelog format, 0.x rules stated)
 - [ ] Windows installer (MSI/NSIS via Tauri bundler), autostart registration, code-signing decision — NSIS per-user installer configured with the tray and CLI as sidecars; OV code-signing chosen as the plan, not yet bought (see docs/release.md)
 - [ ] Linux packaging (.deb/.rpm/AppImage via Tauri bundler), systemd user unit for the tray app — .deb and AppImage configured, systemd unit in packaging/linux with --cleanup as ExecStop; not built on Linux yet, no .rpm
-- [ ] Publish LICENSE files + notices in release artifacts — LICENSE files exist in the repo; not yet bundled in installers
+- [ ] Publish LICENSE files + notices in release artifacts — LICENSE-MIT and LICENSE-APACHE are listed under `bundle.resources` in `src-tauri/tauri.conf.json`; not yet confirmed in a built installer
 - [x] User-facing docs (install guide, CLI reference, session-vs-permanent-install explainer) — docs/user-guide.md
 - [ ] Tag v1.0.0 release, publish to GitHub (tpt-solutions org)
 - [ ] Post-release triage process for bug reports
