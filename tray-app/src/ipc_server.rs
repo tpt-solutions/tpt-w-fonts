@@ -11,6 +11,10 @@ use std::sync::mpsc;
 use std::thread;
 
 use interprocess::local_socket::{GenericNamespaced, ListenerOptions, Stream, prelude::*};
+#[cfg(windows)]
+use interprocess::os::windows::{
+    local_socket::ListenerOptionsExt, security_descriptor::SecurityDescriptor,
+};
 use tpt_fonts_core::{Request, Response, SOCKET_NAME, decode_line, encode_line};
 use winit::event_loop::EventLoopProxy;
 
@@ -19,10 +23,23 @@ use crate::tray::UserEvent;
 /// Largest request line accepted. Requests are small; this stops a runaway client.
 const MAX_REQUEST_BYTES: u64 = 64 * 1024;
 
+/// Pipe access rules on Windows: full access for the owner (the signed-in user, who runs the
+/// tray, GUI and CLI) and for SYSTEM. Without this the default descriptor lets any local account
+/// read the pipe. D: starts the DACL, P protects it from inherited ACEs.
+#[cfg(windows)]
+const PIPE_SDDL: &str = "D:P(A;;GA;;;OW)(A;;GA;;;SY)";
+
 /// Takes the socket name. Fails with `AddrInUse` if another tray process holds it.
 pub fn bind() -> io::Result<interprocess::local_socket::Listener> {
     let name = SOCKET_NAME.to_ns_name::<GenericNamespaced>()?;
-    ListenerOptions::new().name(name).create_sync()
+    let options = ListenerOptions::new().name(name);
+    #[cfg(windows)]
+    let options = {
+        let sddl = widestring::U16CString::from_str(PIPE_SDDL)
+            .map_err(|e| io::Error::other(e.to_string()))?;
+        options.security_descriptor(SecurityDescriptor::deserialize(&sddl)?)
+    };
+    options.create_sync()
 }
 
 /// Accepts connections on a background thread until the process exits.

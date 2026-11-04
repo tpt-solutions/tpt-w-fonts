@@ -26,4 +26,5 @@ winit = "0.30.13"
 tempfile = "3.27.0"
 
 [target."cfg(windows)".dependencies]
+widestring = "1.2.1"
 windows-sys = { version = "0.61.2", features = ["Win32_Foundation", "Win32_System_LibraryLoader", "Win32_UI_WindowsAndMessaging"] }
