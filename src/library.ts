@@ -6,6 +6,7 @@
 
 import { api, errorMessage, type FontRow, type FontState, type LibraryView } from "./api";
 import { button, el, statusLine } from "./dom";
+import { previewIn, resetPreviews } from "./fontsample";
 
 const STATE_LABEL: Record<FontState, string> = {
   installed: "Installed",
@@ -62,13 +63,33 @@ export function createLibraryPanel(
     stateFilter.append(option);
   }
 
+  const sampleInput = el("input");
+  sampleInput.type = "text";
+  sampleInput.value = "Hamburgefonstiv 0123456789";
+  sampleInput.setAttribute("aria-label", "Sample text for every font");
+  sampleInput.addEventListener("input", renderRows);
+
+  const sampleSize = el("input");
+  sampleSize.type = "range";
+  sampleSize.min = "12";
+  sampleSize.max = "48";
+  sampleSize.value = "20";
+  sampleSize.setAttribute("aria-label", "Sample size in pixels");
+  sampleSize.addEventListener("input", renderRows);
+
   const toolbar = el("div", "row");
-  toolbar.append(search, stateFilter, button("Rescan", () => void refresh()));
+  toolbar.append(
+    search,
+    stateFilter,
+    button("Rescan", () => void refresh()),
+    sampleInput,
+    sampleSize,
+  );
 
   const table = el("table", "library");
   const head = el("thead");
   const headRow = el("tr");
-  for (const label of ["State", "Family", "Style", "Format", "Path"]) {
+  for (const label of ["State", "Sample", "Family", "Style", "Format", "Path"]) {
     headRow.append(el("th", "", label));
   }
   head.append(headRow);
@@ -77,6 +98,8 @@ export function createLibraryPanel(
 
   const count = el("p", "meta");
 
+  const detailSample = el("div", "detail-sample", "Aa");
+  detailSample.hidden = true;
   const detail = el("dl", "details");
   const actions = el("div", "row actions");
   actions.hidden = true;
@@ -85,7 +108,16 @@ export function createLibraryPanel(
   const panel = el("section", "panel");
   const tableWrap = el("div", "table-wrap");
   tableWrap.append(table);
-  panel.append(notice, status.element, toolbar, count, detail, actions, tableWrap);
+  panel.append(
+    notice,
+    status.element,
+    toolbar,
+    count,
+    detailSample,
+    detail,
+    actions,
+    tableWrap,
+  );
 
   search.addEventListener("input", renderRows);
   stateFilter.addEventListener("change", renderRows);
@@ -103,6 +135,7 @@ export function createLibraryPanel(
   }
 
   function renderRows(): void {
+    resetPreviews();
     const shown = visibleRows();
     body.replaceChildren();
     for (const row of shown) {
@@ -115,8 +148,12 @@ export function createLibraryPanel(
           select(row);
         }
       });
+      const sample = el("td", "sample", sampleInput.value);
+      sample.style.fontSize = `${sampleSize.value}px`;
+      previewIn(sample, row.path);
       tr.append(
         el("td", `state ${row.state}`, STATE_LABEL[row.state]),
+        sample,
         el("td", "", row.family),
         el("td", "", row.subfamily),
         el("td", "", row.faces > 1 ? `${row.format} (${row.faces} faces)` : row.format),
@@ -139,9 +176,14 @@ export function createLibraryPanel(
     if (!selected) {
       actions.hidden = true;
       detail.hidden = true;
+      detailSample.hidden = true;
       return;
     }
     const row = selected;
+
+    detailSample.hidden = false;
+    detailSample.textContent = sampleInput.value || "Aa";
+    previewIn(detailSample, row.path);
 
     const facts: [string, string][] = [
       ["Full name", row.full_name || row.family],

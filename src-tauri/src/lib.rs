@@ -47,12 +47,18 @@ fn installed_paths() -> Vec<PathBuf> {
 }
 
 #[tauri::command]
-fn library_list() -> Result<LibraryView, String> {
+fn library_list(app: AppHandle) -> Result<LibraryView, String> {
     let (catalog, report) = load_default_catalog().map_err(message)?;
     let (session, tray_running) = session_state();
     let installed = installed_paths();
+    let rows = build_rows(&catalog, &session, &installed);
+    // Each row previews its own font, so the webview needs read access to every listed file.
+    let scope = app.asset_protocol_scope();
+    for row in &rows {
+        let _ = scope.allow_file(&row.path);
+    }
     Ok(LibraryView {
-        rows: build_rows(&catalog, &session, &installed),
+        rows,
         tray_running,
         unreadable: report.errors.len(),
     })
