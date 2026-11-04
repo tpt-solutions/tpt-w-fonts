@@ -42,8 +42,8 @@ Decisions locked in for this roadmap:
 | 8 | Tauri GUI: Main Application | 🟡 Library, detail, preview, duplicates and settings run; grouping and thumbnails open |
 | 9 | Archon Support (Design Only) | 🟡 Design draft written; open questions await the tpt-archon team |
 | 10 | Performance & Polish | 🟡 Scale measured on 10,000 fonts; polish not started |
-| 11 | Testing & QA | ❌ Not Started |
-| 12 | Release v1 | ❌ Not Started |
+| 11 | Testing & QA | 🟡 In Progress (unit and flow tests in; manual QA and stress test open) |
+| 12 | Release v1 | 🟡 In Progress (installer builds locally; signing, Linux packages and tag open) |
 
 ---
 
@@ -95,18 +95,18 @@ Decisions locked in for this roadmap:
 ## Phase 5 — Linux Backend: Fontconfig & Session Activation
 - [x] Linux user-level permanent install (`~/.local/share/fonts`, targeted `fc-cache` refresh) — copies to $XDG_DATA_HOME/fonts with a scoped `fc-cache -f`; tested with a fake runner, not yet on a real Linux desktop
 - [x] Linux user-level uninstall (file removal + fontconfig cache refresh) — refuses paths outside the user directory; fake-runner tested
-- [ ] Fontconfig cache management: inspect cache files, trigger scoped `fc-cache -f` on affected dirs only (avoid full-system rebuild)
+- [ ] Fontconfig cache management: inspect cache files, trigger scoped `fc-cache -f` on affected dirs only (avoid full-system rebuild) — the refresh already runs on the one changed directory, never `fc-cache -r`. Inspecting cache files needs fontconfig's cache naming confirmed on a Linux machine
 - [x] Linux session activation: dedicated session font directory + scoped fontconfig `<include>` added/removed by the resident process, cache refresh on activate/deactivate — session copies in $XDG_CACHE_HOME/tpt-fonts/session plus a fontconfig drop-in in conf.d; fake-runner tested
-- [ ] Session cleanup on resident-process exit/logout (systemd user unit `ExecStop` or signal handler) — `clear_session()` exists; the systemd unit and signal handler come with Phase 6/12
+- [x] Session cleanup on resident-process exit/logout (systemd user unit `ExecStop` or signal handler) — `packaging/linux/tpt-fonts-tray.service` runs `tpt-fonts-tray --cleanup` as `ExecStop`, which deactivates whatever the last session recorded, including after a crash. The unit is in the .deb. Not yet run on a Linux desktop
 - [ ] Verify behavior on X11 and Wayland
 
 ## Phase 6 — Resident Tray App & Session Manager
 - [x] Cross-platform tray-app crate (native tray icon, Windows + Linux) — builds and runs on Windows (IPC and session verified over the named pipe); the tray icon itself was not checked visually, and Linux is not yet built or run
 - [x] Session font registry: tracks active session fonts, OS handles, activation source — `SessionManager` + `SessionRegistry` track fonts, source (GUI/CLI/tray) and timestamps; persisted atomically; 11 tests
-- [ ] Tray menu: quick activate/deactivate list, open main window, quit (clean deactivation on quit) — menu lists active fonts with deactivate, deactivate-all, autostart toggle and quit; the open-window item waits for Phase 8
+- [ ] Tray menu: quick activate/deactivate list, open main window, quit (clean deactivation on quit) — menu has Open tpt-fonts (starts the GUI from the tray's folder), active fonts with deactivate, deactivate-all, autostart toggle and quit. Still missing: a quick-activate list. The menu items have not been clicked in a running tray
 - [x] Optional user-toggleable autostart (Windows Run key/Startup folder, Linux `.desktop` autostart) — toggle is in the tray menu; the desktop-entry file is tested, the Run key is not yet toggled on a real login
 - [x] Orphaned-resource recovery: detect stale session registrations left by a crash/abnormal exit on next launch and clean them up — `recover_orphans` checks the owner PID and deactivates stale fonts; a live owner is left alone
-- [ ] IPC between tray-app resident process and Tauri main window (local socket/named pipe) so the GUI reflects live session state — tray side done: named pipe (local socket on Linux) with one JSON line per request; the GUI client is not yet wired
+- [x] IPC between tray-app resident process and Tauri main window (local socket/named pipe) so the GUI reflects live session state — tray side: named pipe (local socket on Linux) with one JSON line per request. The GUI polls the tray every two seconds and refreshes the library when the active set or the tray's presence changes (`watch_session` in `src-tauri/src/lib.rs`). Not yet seen in a running window
 
 ## Phase 7 — CLI
 - [x] `tpt-fonts list` — filters by family, format, kind (variable or static) and state; `--json` output. There is no separate style filter yet; family and subfamily are both shown
@@ -135,27 +135,27 @@ Decisions locked in for this roadmap:
 ## Phase 10 — Performance & Polish
 - [ ] Cold-start/catalog-load optimization — measured, not optimised. 10,000 fonts, release build: cold scan 1.5-2.3 s, cache load 23-31 ms, warm refresh 250-340 ms, row build 10 ms. Cache is 4.5 MB. Real fonts are larger, so cold scans will be slower. Not optimised until real-font data shows where the time goes
 - [ ] Memory profiling (catalog index + tray resident process + WebView) — catalog scan of 10,000 fonts peaks at about 32 MB working set; tray idle about 10 MB. The GUI and WebView2 figure is not isolated yet: a process-tree measurement was attempted but blocked, and the total would include WebView2 used by other apps
-- [ ] Light/dark theme support, accessibility pass — theme choice (system, light, dark) is in; a keyboard and screen-reader audit has not been done
+- [ ] Light/dark theme support, accessibility pass — theme choice (system, light, dark) is in. A code audit fixed: control borders below 3:1 (new `--control-border` token), no visible focus on library rows, errors and session-count changes not announced, and motion without a reduced-motion guard. Text contrast in both themes meets WCAG AA. Still open: a real keyboard and screen-reader pass
 - [ ] App icon, branding assets — placeholder icon in place
 - [x] First-run onboarding — a dismissible notice explaining session versus permanent install, shown once per viewer
 - [x] Crash reporting/local error logging (opt-in only) — local log only, in logs/tpt-fonts.log under the state directory, rotated at 1 MiB. Nothing is sent anywhere, so no opt-in is needed for v1; remote reporting is not built
 
 ## Phase 11 — Testing & QA
-- [ ] Unit tests: parsing engine, duplicate detection, session activation logic (mocked per-platform backends)
-- [ ] Integration tests: end-to-end install/activate/deactivate/uninstall flows
+- [x] Unit tests: parsing engine, duplicate detection, session activation logic (mocked per-platform backends) — parsing in `core/tests/parsing.rs`, duplicates in `core/src/duplicates.rs` (9 tests), session logic with fake backends in `core/tests/session.rs`
+- [x] Integration tests: end-to-end install/activate/deactivate/uninstall flows — `core/tests/install_flows.rs`, `session_flows.rs` and `win32_session_flows.rs`, with fake OS boundaries so they run on every platform
 - [ ] Manual QA: Windows 10/11
 - [ ] Manual QA: Linux (X11 + Wayland, at least one major distro)
 - [ ] Stress test: 10,000 scanned/installed fonts — catalog load time, search responsiveness, RAM usage
-- [ ] Security review: malformed/malicious font file parsing (fuzzing) — mutation fuzzing done (core/tests/fuzz_parse.rs; 20,000 iterations pass in debug and release); parser panics are caught and reported as errors. Scan-directory traversal and IPC boundary reviewed by reading the code: scanning uses `follow_links(false)`; uninstall only acts on paths the backend lists itself; the tray caps request size at 64 KiB and activation rejects non-font paths. Containment checks in `win32.rs` and `linux.rs` now canonicalise both sides (`format::is_within`), with tests for `..` escapes and deleted files. Open: the named-pipe ACL on Windows has not been confirmed
+- [ ] Security review: malformed/malicious font file parsing (fuzzing) — mutation fuzzing done (core/tests/fuzz_parse.rs; 20,000 iterations pass in debug and release); parser panics are caught and reported as errors. Scan-directory traversal and IPC boundary reviewed by reading the code: scanning uses `follow_links(false)`; uninstall only acts on paths the backend lists itself; the tray caps request size at 64 KiB and activation rejects non-font paths. Containment checks in `win32.rs` and `linux.rs` now canonicalise both sides (`format::is_within`), with tests for `..` escapes and deleted files. The tray's named pipe now has a DACL that grants access only to the owner and SYSTEM (`PIPE_SDDL` in `tray-app/src/ipc_server.rs`). A CLI round trip works through it. PowerShell cannot read a pipe's security descriptor back, and no second account was tested. Open: confirm from a second Windows account that the pipe refuses access
 
 ## Phase 12 — Release v1
 - [x] Finalize versioning scheme (SemVer) and changelog process — policy and CHANGELOG.md in place (Keep a Changelog format, 0.x rules stated)
-- [ ] Windows installer (MSI/NSIS via Tauri bundler), autostart registration, code-signing decision — NSIS per-user installer configured with the tray and CLI as sidecars; OV code-signing chosen as the plan, not yet bought (see docs/release.md)
+- [ ] Windows installer (MSI/NSIS via Tauri bundler), autostart registration, code-signing decision — NSIS per-user installer configured with the tray and CLI as sidecars, and it builds locally (`npx tauri build --bundles nsis`, 2.46 MiB); OV code-signing chosen as the plan, not yet bought (see docs/release.md)
 - [ ] Linux packaging (.deb/.rpm/AppImage via Tauri bundler), systemd user unit for the tray app — .deb and AppImage configured, systemd unit in packaging/linux with --cleanup as ExecStop; not built on Linux yet, no .rpm
-- [ ] Publish LICENSE files + notices in release artifacts — LICENSE-MIT and LICENSE-APACHE are listed under `bundle.resources` in `src-tauri/tauri.conf.json`; not yet confirmed in a built installer
+- [x] Publish LICENSE files + notices in release artifacts — LICENSE-MIT and LICENSE-APACHE are listed under `bundle.resources` in `src-tauri/tauri.conf.json`, and the generated NSIS script installs and removes both. Not checked by running the built installer
 - [x] User-facing docs (install guide, CLI reference, session-vs-permanent-install explainer) — docs/user-guide.md
 - [ ] Tag v1.0.0 release, publish to GitHub (tpt-solutions org)
-- [ ] Post-release triage process for bug reports
+- [x] Post-release triage process for bug reports — `docs/triage.md`: intake, what to ask for, severity, labels, reproduction and a weekly review
 
 ---
 
