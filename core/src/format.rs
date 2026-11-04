@@ -112,7 +112,10 @@ mod tests {
         let missing = dir.path().join("gone.ttf");
 
         assert!(is_within(&inside, dir.path()));
-        assert!(is_within(&missing, dir.path()), "deleted files check via the parent");
+        assert!(
+            is_within(&missing, dir.path()),
+            "deleted files check via the parent"
+        );
     }
 
     #[test]
