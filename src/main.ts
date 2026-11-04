@@ -3,6 +3,7 @@
 
 import "./styles.css";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
+import { listen } from "@tauri-apps/api/event";
 import { createDuplicatesPanel } from "./duplicates";
 import { createLibraryPanel } from "./library";
 import { createPreviewPanel } from "./preview";
@@ -82,6 +83,9 @@ if (root) {
     tabButtons.set(tab, item);
     tabBar.append(item);
   }
+
+  // Fonts added or removed outside the app refresh the library automatically.
+  void listen("library-changed", () => void library.refresh());
 
   const dropStatus = statusLine();
   const header = el("header");

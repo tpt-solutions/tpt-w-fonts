@@ -8,12 +8,14 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use serde::Serialize;
-use tauri::{AppHandle, Manager};
+use std::time::Duration;
+
+use tauri::{AppHandle, Emitter, Manager};
 use tpt_fonts_core::{
-    ActivationSource, DuplicateGroup, FontBackend, FontError, FontRow, FontSource, PreviewState,
-    Request, Resolution, Response, autostart_enabled, build_rows, find_duplicates,
-    load_default_catalog, platform_backend, read_font_file, resolve_exact_group, send_request,
-    set_autostart,
+    ActivationSource, DuplicateGroup, FontBackend, FontError, FontRow, FontSource, FontWatcher,
+    PreviewState, Request, Resolution, Response, autostart_enabled, build_rows, default_scan_roots,
+    find_duplicates, load_default_catalog, platform_backend, read_font_file, resolve_exact_group,
+    send_request, set_autostart,
 };
 
 /// The library as the frontend shows it.
@@ -219,9 +221,35 @@ fn preview_apply_saved(mut state: PreviewState, index: usize) -> Result<PreviewS
     Ok(state)
 }
 
+/// Watches the font folders and tells the frontend when they change, so the library stays current
+/// without a manual rescan. A burst of changes (installing one font writes several files) becomes
+/// a single event after a short quiet period.
+fn watch_library(app: AppHandle) {
+    std::thread::spawn(move || {
+        let roots: Vec<PathBuf> = default_scan_roots().into_iter().map(|r| r.path).collect();
+        let refs: Vec<&Path> = roots.iter().map(PathBuf::as_path).collect();
+        let Ok((watcher, changes)) = FontWatcher::start(&refs) else {
+            return;
+        };
+        // The watcher stops when dropped, so it lives as long as this thread does.
+        let _watcher = watcher;
+        while changes.recv().is_ok() {
+            // Keep draining until the folders have been quiet for a moment.
+            while changes.recv_timeout(Duration::from_millis(400)).is_ok() {}
+            if app.emit("library-changed", ()).is_err() {
+                break;
+            }
+        }
+    });
+}
+
 /// Builds and runs the Tauri application. Shared by the desktop binary and any future mobile entry point.
 pub fn run() {
     tauri::Builder::default()
+        .setup(|app| {
+            watch_library(app.handle().clone());
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             library_list,
             session_activate,
