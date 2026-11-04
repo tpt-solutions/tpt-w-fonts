@@ -77,10 +77,48 @@ export function createLibraryPanel(
   sampleSize.setAttribute("aria-label", "Sample size in pixels");
   sampleSize.addEventListener("input", renderRows);
 
+  const formatFilter = el("select");
+  formatFilter.setAttribute("aria-label", "Filter by format");
+  for (const [value, label] of [
+    ["", "All formats"],
+    ["Ttf", "TrueType (.ttf)"],
+    ["Otf", "OpenType (.otf)"],
+    ["Ttc", "Collection (.ttc)"],
+  ] as const) {
+    const option = el("option", "", label);
+    option.value = value;
+    formatFilter.append(option);
+  }
+
+  const kindFilter = el("select");
+  kindFilter.setAttribute("aria-label", "Filter by variable or static");
+  for (const [value, label] of [
+    ["", "Variable and static"],
+    ["variable", "Variable only"],
+    ["static", "Static only"],
+  ] as const) {
+    const option = el("option", "", label);
+    option.value = value;
+    kindFilter.append(option);
+  }
+
+  const groupToggle = el("input");
+  groupToggle.type = "checkbox";
+  groupToggle.id = "group-by-family";
+  const groupLabel = el("label", "setting");
+  groupLabel.append(groupToggle, " Group by family");
+
+  formatFilter.addEventListener("change", renderRows);
+  kindFilter.addEventListener("change", renderRows);
+  groupToggle.addEventListener("change", renderRows);
+
   const toolbar = el("div", "row");
   toolbar.append(
     search,
     stateFilter,
+    formatFilter,
+    kindFilter,
+    groupLabel,
     button("Rescan", () => void refresh()),
     sampleInput,
     sampleSize,
@@ -125,8 +163,13 @@ export function createLibraryPanel(
   function visibleRows(): FontRow[] {
     const query = search.value.trim().toLowerCase();
     const wanted = stateFilter.value as FontState | "";
+    const format = formatFilter.value;
+    const kind = kindFilter.value;
     return rows.filter((row) => {
       if (wanted && row.state !== wanted) return false;
+      if (format && row.format !== format) return false;
+      if (kind === "variable" && !row.is_variable) return false;
+      if (kind === "static" && row.is_variable) return false;
       if (!query) return true;
       return [row.family, row.subfamily, row.full_name, row.path].some((text) =>
         text.toLowerCase().includes(query),
@@ -138,7 +181,17 @@ export function createLibraryPanel(
     resetPreviews();
     const shown = visibleRows();
     body.replaceChildren();
+    let currentFamily: string | null = null;
     for (const row of shown) {
+      if (groupToggle.checked && row.family !== currentFamily) {
+        currentFamily = row.family;
+        const familyCount = shown.filter((r) => r.family === row.family).length;
+        const header = el("tr", "group-row");
+        const cell = el("th", "", `${row.family || "(no family name)"} · ${familyCount}`);
+        cell.colSpan = 6;
+        header.append(cell);
+        body.append(header);
+      }
       const tr = el("tr", row === selected ? "selected" : "");
       tr.tabIndex = 0;
       tr.addEventListener("click", () => select(row));

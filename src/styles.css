@@ -396,3 +396,10 @@ td.sample.unavailable::after {
   background: var(--bg);
   overflow-wrap: anywhere;
 }
+
+tr.group-row th {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  color: var(--accent);
+  font-size: 0.85rem;
+  padding: 8px;
+}
