@@ -4,7 +4,7 @@
 //! The tray icon, its menu, and the UI-thread event loop that owns the session.
 
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::mpsc::Sender;
 
 use tpt_fonts_core::{
@@ -33,6 +33,7 @@ pub enum UserEvent {
 
 /// What a menu item does when chosen.
 enum Action {
+    OpenWindow,
     Deactivate(PathBuf),
     DeactivateAll,
     ToggleAutostart,
@@ -93,6 +94,11 @@ impl App {
         self.actions.clear();
         let menu = Menu::new();
         let count = self.manager.active().len();
+        let open = MenuItem::new("Open tpt-fonts", true, None);
+        self.actions.insert(open.id().clone(), Action::OpenWindow);
+        append(&menu, &open);
+        append(&menu, &PredefinedMenuItem::separator());
+
         let header = MenuItem::new(format!("Active session fonts: {count}"), false, None);
         append(&menu, &header);
 
@@ -139,6 +145,11 @@ impl App {
             return;
         };
         match action {
+            Action::OpenWindow => {
+                if let Err(err) = open_window(&self.exe) {
+                    report!("tpt-fonts-tray: {err}");
+                }
+            }
             Action::Deactivate(path) => {
                 if let Err(err) = self.manager.deactivate(&path) {
                     report!("tpt-fonts-tray: {err}");
@@ -206,6 +217,24 @@ impl ApplicationHandler<UserEvent> for App {
             }
         }
     }
+}
+
+/// Starts the GUI from the folder the tray runs from. The GUI is not waited on: it runs on its own,
+/// and the tray keeps the session either way.
+fn open_window(tray_exe: &Path) -> Result<(), String> {
+    let name = if cfg!(windows) {
+        "tpt-fonts-gui.exe"
+    } else {
+        "tpt-fonts-gui"
+    };
+    let dir = tray_exe
+        .parent()
+        .ok_or_else(|| "the tray executable has no parent directory".to_string())?;
+    let gui = dir.join(name);
+    std::process::Command::new(&gui)
+        .spawn()
+        .map(|_| ())
+        .map_err(|e| format!("could not start {}: {e}", gui.display()))
 }
 
 /// `muda` menus take items by reference; this keeps the call sites short.
