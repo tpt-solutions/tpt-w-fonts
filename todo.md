@@ -37,7 +37,7 @@ Decisions locked in for this roadmap:
 | 3 | Variable Font Preview Engine | 🟡 Implemented, GUI not yet exercised |
 | 4 | Windows Backend: User-Level Install & Session Activation | 🟡 In Progress (tray wiring pending) |
 | 5 | Linux Backend: Fontconfig & Session Activation | 🟡 Implemented, not yet run on Linux |
-| 6 | Resident Tray App & Session Manager | 🟡 Tray runs on Windows; GUI client, Linux and logoff cleanup pending |
+| 6 | Resident Tray App & Session Manager | 🟡 Tray runs on Windows with a quick-activate menu; Linux and logoff cleanup pending |
 | 7 | CLI | 🟡 Implemented; SVG preview only, uninstall not run from the CLI |
 | 8 | Tauri GUI: Main Application | 🟡 Library, detail, preview, duplicates and settings run; grouping and thumbnails open |
 | 9 | Archon Support (Design Only) | 🟡 Design draft written; open questions await the tpt-archon team |
@@ -103,7 +103,7 @@ Decisions locked in for this roadmap:
 ## Phase 6 — Resident Tray App & Session Manager
 - [x] Cross-platform tray-app crate (native tray icon, Windows + Linux) — builds and runs on Windows (IPC and session verified over the named pipe); the tray icon itself was not checked visually, and Linux is not yet built or run
 - [x] Session font registry: tracks active session fonts, OS handles, activation source — `SessionManager` + `SessionRegistry` track fonts, source (GUI/CLI/tray) and timestamps; persisted atomically; 11 tests
-- [ ] Tray menu: quick activate/deactivate list, open main window, quit (clean deactivation on quit) — menu has Open tpt-fonts (starts the GUI from the tray's folder), active fonts with deactivate, deactivate-all, autostart toggle and quit. Still missing: a quick-activate list. The menu items have not been clicked in a running tray
+- [x] Tray menu: quick activate/deactivate list, open main window, quit (clean deactivation on quit) — the menu has Open tpt-fonts (starts the GUI from the tray's folder), an "Activate a recent font" submenu of the 40 newest library fonts that are not active (read from the catalog cache, so it does not scan), active fonts with deactivate, deactivate-all, autostart toggle and quit. The tray starts with this menu and answers CLI requests, but the menu items have not been clicked in a running tray
 - [x] Optional user-toggleable autostart (Windows Run key/Startup folder, Linux `.desktop` autostart) — toggle is in the tray menu; the desktop-entry file is tested, the Run key is not yet toggled on a real login
 - [x] Orphaned-resource recovery: detect stale session registrations left by a crash/abnormal exit on next launch and clean them up — `recover_orphans` checks the owner PID and deactivates stale fonts; a live owner is left alone
 - [x] IPC between tray-app resident process and Tauri main window (local socket/named pipe) so the GUI reflects live session state — tray side: named pipe (local socket on Linux) with one JSON line per request. The GUI polls the tray every two seconds and refreshes the library when the active set or the tray's presence changes (`watch_session` in `src-tauri/src/lib.rs`). Not yet seen in a running window
@@ -145,7 +145,7 @@ Decisions locked in for this roadmap:
 - [x] Integration tests: end-to-end install/activate/deactivate/uninstall flows — `core/tests/install_flows.rs`, `session_flows.rs` and `win32_session_flows.rs`, with fake OS boundaries so they run on every platform
 - [ ] Manual QA: Windows 10/11
 - [ ] Manual QA: Linux (X11 + Wayland, at least one major distro)
-- [ ] Stress test: 10,000 scanned/installed fonts — catalog load time, search responsiveness, RAM usage
+- [x] Stress test: 10,000 scanned/installed fonts — catalog load time, search responsiveness, RAM usage — `core/tests/stress.rs` (ignored by default) builds 10,000 hard links to the 346 system fonts and measures them. Release build on Windows: cold scan 86 s (it hashes every file, about 10.6 GB of font data, so this is disk-bound; the 1.5–2.3 s cold figure above was measured on a different fixture and is not comparable), cache load 311 ms, warm refresh 253 ms, row build 35 ms, search 1.5–2.1 ms per query. Peak working set of the test process 55 MB, sampled every 100 ms. Not measured: the GUI and WebView2 under the same load
 - [ ] Security review: malformed/malicious font file parsing (fuzzing) — mutation fuzzing done (core/tests/fuzz_parse.rs; 20,000 iterations pass in debug and release); parser panics are caught and reported as errors. Scan-directory traversal and IPC boundary reviewed by reading the code: scanning uses `follow_links(false)`; uninstall only acts on paths the backend lists itself; the tray caps request size at 64 KiB and activation rejects non-font paths. Containment checks in `win32.rs` and `linux.rs` now canonicalise both sides (`format::is_within`), with tests for `..` escapes and deleted files. The tray's named pipe now has a DACL that grants access only to the owner and SYSTEM (`PIPE_SDDL` in `tray-app/src/ipc_server.rs`). A CLI round trip works through it. PowerShell cannot read a pipe's security descriptor back, and no second account was tested. Open: confirm from a second Windows account that the pipe refuses access
 
 ## Phase 12 — Release v1
