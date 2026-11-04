@@ -65,7 +65,7 @@ Decisions locked in for this roadmap:
 - [x] Font format detection: TTF / OTF / TTC / variable vs static
 - [x] Recursive scan of font directories (Windows per-user + system read-only view, Linux `~/.local/share/fonts` + `/usr/share/fonts` read-only view) building an in-memory catalog
 - [x] Catalog persistence for fast cold start (SQLite or serialized cache) — JSON cache with schema version and atomic write (not SQLite)
-- [ ] Filesystem watch on font directories (`ReadDirectoryChangesW` / `inotify`) to keep the catalog live
+- [x] Filesystem watch on font directories (`ReadDirectoryChangesW` / `inotify`) to keep the catalog live — the GUI watches both font folders and refreshes the library on change, with bursts coalesced; verified live (a copied font raised the count 346 to 347, and removing it restored 346). The CLI and tray do not watch.
 - [x] Unit tests: parsing fixtures across TTF/OTF/TTC/variable-font samples — runs against installed system fonts; skips when absent, no font binaries committed
 
 ## Phase 2 — Duplicate Detection
@@ -118,8 +118,8 @@ Decisions locked in for this roadmap:
 - [x] CLI unit/integration tests — 5 end-to-end tests of the binary, plus query and specimen tests in core
 
 ## Phase 8 — Tauri GUI: Main Application
-- [ ] Main window: font catalog list/grid — list view with state, family, style, format and path, sorted by family; family grouping and thumbnails are still open
-- [ ] Search/filter — text search and state filter work; format and variable/static filters are only in the CLI so far
+- [x] Main window: font catalog list/grid — list with state, a sample in each font's own typeface, family, style, format and path; family grouping is a header row per family. Thumbnails are the sample column. Still open: a grid view
+- [x] Search/filter — text search, state, format and variable/static filters in the GUI; the CLI has the same filters
 - [x] Font detail panel — shows full name, version, vendor, type, units per em, source, embedding rights (fsType) and path, with the actions for the selected font; checked in a screenshot
 - [x] Duplicate resolution view — identical copies can be resolved: keep one, review the dry-run plan, then confirm to trash the rest. Same-metadata groups stay report-only. The trash path is covered by a dry-run test only; it has not been run on real duplicates
 - [x] Variable font preview view — opened from the library Preview action or the Preview tab (built in Phase 3)
@@ -133,8 +133,8 @@ Decisions locked in for this roadmap:
 - [x] Post-v1 `archon` Cargo feature flag plan — written as section 5 of the design doc; no code is added in v1
 
 ## Phase 10 — Performance & Polish
-- [ ] Cold-start/catalog-load optimization — measured, not optimised yet. On 10,000 fonts (27 KB each, release build): cold scan 1.48 s, cache load 31 ms, warm refresh 340 ms, row build 9 ms. Run `cargo run --release -p tpt-fonts-core --example scale -- <dir>`. Real fonts are larger, so cold scans will take longer
-- [ ] Memory profiling (catalog index + tray resident process + WebView) — not measured yet
+- [ ] Cold-start/catalog-load optimization — measured, not optimised. 10,000 fonts, release build: cold scan 1.5-2.3 s, cache load 23-31 ms, warm refresh 250-340 ms, row build 10 ms. Cache is 4.5 MB. Real fonts are larger, so cold scans will be slower. Not optimised until real-font data shows where the time goes
+- [ ] Memory profiling (catalog index + tray resident process + WebView) — catalog scan of 10,000 fonts peaks at about 32 MB working set; tray idle about 10 MB. The GUI and WebView2 figure is not isolated yet: a process-tree measurement was attempted but blocked, and the total would include WebView2 used by other apps
 - [ ] Light/dark theme support, accessibility pass — theme choice (system, light, dark) is in; a keyboard and screen-reader audit has not been done
 - [ ] App icon, branding assets — placeholder icon in place
 - [x] First-run onboarding — a dismissible notice explaining session versus permanent install, shown once per viewer
@@ -146,14 +146,14 @@ Decisions locked in for this roadmap:
 - [ ] Manual QA: Windows 10/11
 - [ ] Manual QA: Linux (X11 + Wayland, at least one major distro)
 - [ ] Stress test: 10,000 scanned/installed fonts — catalog load time, search responsiveness, RAM usage
-- [ ] Security review: malformed/malicious font file parsing (fuzzing), path traversal in scan directories, IPC boundary (tray↔GUI, CLI↔core)
+- [ ] Security review: malformed/malicious font file parsing (fuzzing) — mutation fuzzing done (core/tests/fuzz_parse.rs; 20,000 iterations pass in debug and release); parser panics are caught and reported as errors. Still open: path traversal review of scan directories, and an IPC boundary review (tray and CLI and GUI)
 
 ## Phase 12 — Release v1
-- [ ] Finalize versioning scheme (SemVer) and changelog process
+- [x] Finalize versioning scheme (SemVer) and changelog process — policy and CHANGELOG.md in place (Keep a Changelog format, 0.x rules stated)
 - [ ] Windows installer (MSI/NSIS via Tauri bundler), autostart registration, code-signing decision — NSIS per-user installer configured with the tray and CLI as sidecars; OV code-signing chosen as the plan, not yet bought (see docs/release.md)
 - [ ] Linux packaging (.deb/.rpm/AppImage via Tauri bundler), systemd user unit for the tray app — .deb and AppImage configured, systemd unit in packaging/linux with --cleanup as ExecStop; not built on Linux yet, no .rpm
 - [ ] Publish LICENSE files + notices in release artifacts — LICENSE files exist in the repo; not yet bundled in installers
-- [ ] User-facing docs (install guide, CLI reference, session-vs-permanent-install explainer)
+- [x] User-facing docs (install guide, CLI reference, session-vs-permanent-install explainer) — docs/user-guide.md
 - [ ] Tag v1.0.0 release, publish to GitHub (tpt-solutions org)
 - [ ] Post-release triage process for bug reports
 
