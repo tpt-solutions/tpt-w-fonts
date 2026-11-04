@@ -35,7 +35,9 @@ pub use autostart::{
     AUTOSTART_NAME, autostart_enabled, desktop_entry, set_autostart, write_desktop_entry,
 };
 pub use backend::{FontBackend, InstalledFont};
-pub use catalog::{Catalog, RefreshReport, load_default_catalog};
+pub use catalog::{
+    Catalog, RefreshReport, cached_default_catalog, load_default_catalog, quick_candidates,
+};
 pub use duplicates::{
     DuplicateGroup, DuplicateKind, Resolution, find_duplicates, keep_one, metadata_diff,
     resolve_exact_group,

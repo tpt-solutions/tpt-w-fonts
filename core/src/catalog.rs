@@ -146,13 +146,80 @@ fn candidate_paths(root: &Path) -> impl Iterator<Item = PathBuf> {
 /// Returns the refreshed catalog and the refresh report. The cache lives in the app state
 /// directory, so repeated calls are cheap: unchanged files are not re-read.
 pub fn load_default_catalog() -> Result<(Catalog, RefreshReport)> {
-    let dir = crate::platform::app_state_dir().ok_or_else(|| FontError::Backend {
+    let cache = default_catalog_path().ok_or_else(|| FontError::Backend {
         path: PathBuf::new(),
         reason: "no per-user state directory could be determined".into(),
     })?;
-    let cache = dir.join("catalog.json");
     let mut catalog = Catalog::load(&cache);
     let report = catalog.refresh(&crate::scan_dirs::scan_roots());
     catalog.save(&cache)?;
     Ok((catalog, report))
+}
+
+/// Where the catalog cache lives, if the platform has a per-user state directory.
+pub fn default_catalog_path() -> Option<PathBuf> {
+    crate::platform::app_state_dir().map(|dir| dir.join("catalog.json"))
+}
+
+/// Reads the cached catalog without scanning, for callers that need a quick answer such as the
+/// tray menu. Returns `None` when there is no state directory. The result may be stale.
+pub fn cached_default_catalog() -> Option<Catalog> {
+    default_catalog_path().map(|path| Catalog::load(&path))
+}
+
+/// The files a quick list should offer: those `is_active` does not name, newest first.
+///
+/// Returns at most `limit` files and the total number that qualified, so the caller can say
+/// how many were left out.
+pub fn quick_candidates(
+    files: &[FontFile],
+    is_active: impl Fn(&Path) -> bool,
+    limit: usize,
+) -> (Vec<&FontFile>, usize) {
+    let mut candidates: Vec<&FontFile> = files.iter().filter(|f| !is_active(&f.path)).collect();
+    candidates.sort_by(|a, b| {
+        b.modified_ms
+            .cmp(&a.modified_ms)
+            .then_with(|| a.path.cmp(&b.path))
+    });
+    let total = candidates.len();
+    candidates.truncate(limit);
+    (candidates, total)
+}
+
+#[cfg(test)]
+mod quick_tests {
+    use super::*;
+    use crate::model::FontSource;
+
+    fn file(name: &str, modified_ms: u64) -> FontFile {
+        FontFile {
+            path: PathBuf::from(name),
+            source: FontSource::User,
+            format: crate::model::FontFormat::Ttf,
+            size: 0,
+            modified_ms,
+            content_hash: String::new(),
+            faces: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn quick_list_skips_active_fonts_and_puts_newest_first() {
+        let files = vec![file("a.ttf", 10), file("b.ttf", 30), file("c.ttf", 20)];
+        let active = PathBuf::from("b.ttf");
+        let (picked, total) = quick_candidates(&files, |p| p == active, 10);
+        let names: Vec<_> = picked.iter().map(|f| f.path.clone()).collect();
+        assert_eq!(names, vec![PathBuf::from("c.ttf"), PathBuf::from("a.ttf")]);
+        assert_eq!(total, 2);
+    }
+
+    #[test]
+    fn quick_list_caps_the_count_and_reports_the_total() {
+        let files: Vec<_> = (0..5).map(|i| file(&format!("{i}.ttf"), i)).collect();
+        let (picked, total) = quick_candidates(&files, |_| false, 2);
+        assert_eq!(picked.len(), 2);
+        assert_eq!(total, 5);
+        assert_eq!(picked[0].modified_ms, 4);
+    }
 }
