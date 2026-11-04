@@ -8,9 +8,12 @@ use std::path::{Path, PathBuf};
 use std::sync::mpsc::Sender;
 
 use tpt_fonts_core::{
-    Request, Response, SessionManager, autostart_enabled, handle_request, set_autostart,
+    ActivationSource, FontFile, Request, Response, SessionManager, autostart_enabled,
+    cached_default_catalog, handle_request, quick_candidates, set_autostart,
 };
-use tray_icon::menu::{CheckMenuItem, Menu, MenuEvent, MenuId, MenuItem, PredefinedMenuItem};
+use tray_icon::menu::{
+    CheckMenuItem, IsMenuItem, Menu, MenuEvent, MenuId, MenuItem, PredefinedMenuItem, Submenu,
+};
 use tray_icon::{Icon, TrayIcon, TrayIconBuilder};
 use winit::application::ApplicationHandler;
 use winit::event::WindowEvent;
@@ -34,6 +37,7 @@ pub enum UserEvent {
 /// What a menu item does when chosen.
 enum Action {
     OpenWindow,
+    Activate(PathBuf),
     Deactivate(PathBuf),
     DeactivateAll,
     ToggleAutostart,
@@ -113,6 +117,10 @@ impl App {
             append(&menu, &item);
         }
 
+        let quick = Submenu::new("Activate a recent font", true);
+        self.fill_quick_list(&quick);
+        append(&menu, &quick);
+
         append(&menu, &PredefinedMenuItem::separator());
         let deactivate_all = MenuItem::new("Deactivate all", count > 0, None);
         self.actions
@@ -132,6 +140,53 @@ impl App {
         menu
     }
 
+    /// Adds the newest library fonts that are not active yet. The list reads the catalog cache and
+    /// does not scan, so it may lag a moment behind the library; the full search is in the GUI.
+    fn fill_quick_list(&mut self, submenu: &Submenu) {
+        let Some(catalog) = cached_default_catalog() else {
+            append_sub(
+                submenu,
+                &MenuItem::new("No font library available", false, None),
+            );
+            return;
+        };
+        let active: Vec<PathBuf> = self
+            .manager
+            .active()
+            .iter()
+            .map(|f| f.path.clone())
+            .collect();
+        let (picked, total) = quick_candidates(
+            catalog.files(),
+            |path| active.iter().any(|a| a == path),
+            QUICK_LIST_LIMIT,
+        );
+        if picked.is_empty() {
+            append_sub(
+                submenu,
+                &MenuItem::new("No inactive fonts in the library", false, None),
+            );
+            return;
+        }
+        for file in picked {
+            let item = MenuItem::new(quick_label(file), true, None);
+            self.actions
+                .insert(item.id().clone(), Action::Activate(file.path.clone()));
+            append_sub(submenu, &item);
+        }
+        if total > QUICK_LIST_LIMIT {
+            let more = total - QUICK_LIST_LIMIT;
+            append_sub(
+                submenu,
+                &MenuItem::new(
+                    format!("{more} more: open tpt-fonts to find them"),
+                    false,
+                    None,
+                ),
+            );
+        }
+    }
+
     /// Rebuilds the menu so it reflects the current session.
     fn refresh_menu(&mut self) {
         let menu = self.build_menu();
@@ -147,6 +202,11 @@ impl App {
         match action {
             Action::OpenWindow => {
                 if let Err(err) = open_window(&self.exe) {
+                    report!("tpt-fonts-tray: {err}");
+                }
+            }
+            Action::Activate(path) => {
+                if let Err(err) = self.manager.activate(&path, ActivationSource::Tray) {
                     report!("tpt-fonts-tray: {err}");
                 }
             }
@@ -237,9 +297,30 @@ fn open_window(tray_exe: &Path) -> Result<(), String> {
         .map_err(|e| format!("could not start {}: {e}", gui.display()))
 }
 
+/// Most fonts the quick list offers. Longer lists are a menu nobody scrolls.
+const QUICK_LIST_LIMIT: usize = 40;
+
+/// The label for a quick-list entry: the first face's family and style, or the file name.
+fn quick_label(file: &FontFile) -> String {
+    match file.faces.first() {
+        Some(face) if face.subfamily.is_empty() => face.family.clone(),
+        Some(face) => format!("{} {}", face.family, face.subfamily),
+        None => file.path.file_name().map_or_else(
+            || file.path.display().to_string(),
+            |n| n.to_string_lossy().into_owned(),
+        ),
+    }
+}
+
 /// `muda` menus take items by reference; this keeps the call sites short.
-fn append(menu: &Menu, item: &dyn tray_icon::menu::IsMenuItem) {
+fn append(menu: &Menu, item: &dyn IsMenuItem) {
     if let Err(err) = menu.append(item) {
+        report!("tpt-fonts-tray: could not add a menu item: {err}");
+    }
+}
+
+fn append_sub(submenu: &Submenu, item: &dyn IsMenuItem) {
+    if let Err(err) = submenu.append(item) {
         report!("tpt-fonts-tray: could not add a menu item: {err}");
     }
 }
