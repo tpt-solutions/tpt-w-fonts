@@ -2,6 +2,7 @@
 // Copyright (c) 2026 TPT Solutions
 
 use std::fs;
+use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::path::Path;
 use std::time::UNIX_EPOCH;
 
@@ -52,6 +53,19 @@ pub fn read_font_file(path: &Path, source: FontSource) -> Result<FontFile> {
 ///
 /// Returns a human-readable reason on failure, which the caller wraps with the path.
 pub fn parse_faces(data: &[u8], format: FontFormat) -> std::result::Result<Vec<FontFace>, String> {
+    // ttf-parser has debug-only assertions on some malformed input. In debug builds those panic,
+    // which would take down the tray or GUI for a bad file. Treat any panic as a parse failure so
+    // every build profile behaves the same way on hostile data.
+    match catch_unwind(AssertUnwindSafe(|| parse_faces_unchecked(data, format))) {
+        Ok(result) => result,
+        Err(_) => Err("malformed font data".to_string()),
+    }
+}
+
+fn parse_faces_unchecked(
+    data: &[u8],
+    format: FontFormat,
+) -> std::result::Result<Vec<FontFace>, String> {
     let count = match format {
         FontFormat::Ttc => ttf_parser::fonts_in_collection(data)
             .ok_or_else(|| "invalid font collection header".to_string())?,

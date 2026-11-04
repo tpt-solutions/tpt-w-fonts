@@ -7,6 +7,7 @@
 
 use std::fmt::Write as _;
 use std::fs;
+use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::path::Path;
 
 use ttf_parser::{Face, GlyphId, OutlineBuilder, Tag};
@@ -21,6 +22,25 @@ const PADDING: f32 = 16.0;
 /// `axes` are `(tag, value)` pairs such as `("wght", 700.0)`. The font clamps values to the axis
 /// range. Unknown tags are an error.
 pub fn render_svg(
+    font_path: &Path,
+    face_index: u32,
+    axes: &[(String, f32)],
+    text: &str,
+    size_px: f32,
+) -> Result<String> {
+    // Same guard as the face parser: a debug-only assertion in ttf-parser must not crash the caller.
+    match catch_unwind(AssertUnwindSafe(|| {
+        render_svg_unchecked(font_path, face_index, axes, text, size_px)
+    })) {
+        Ok(result) => result,
+        Err(_) => Err(FontError::Parse {
+            path: font_path.to_path_buf(),
+            reason: "malformed font data".into(),
+        }),
+    }
+}
+
+fn render_svg_unchecked(
     font_path: &Path,
     face_index: u32,
     axes: &[(String, f32)],
