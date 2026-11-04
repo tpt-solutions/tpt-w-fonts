@@ -293,6 +293,26 @@ fn scan_dirs_remove(path: String, restart: State<WatchRestart>) -> Result<(), St
     Ok(())
 }
 
+/// Polls the tray so the library follows session changes made elsewhere, such as from the CLI or
+/// the tray menu. An event is sent only when the active set or the tray's presence changes, so an
+/// idle poll does nothing. The first reading is not an event: the library loads on its own.
+fn watch_session(app: AppHandle) {
+    std::thread::spawn(move || {
+        let mut last: Option<(Vec<PathBuf>, bool)> = None;
+        loop {
+            let mut state = session_state();
+            state.0.sort();
+            if last.as_ref() != Some(&state) {
+                if last.is_some() && app.emit("session-changed", ()).is_err() {
+                    return;
+                }
+                last = Some(state);
+            }
+            std::thread::sleep(Duration::from_secs(2));
+        }
+    });
+}
+
 /// Watches the font folders and tells the frontend when they change, so the library stays current
 /// without a manual rescan. A burst of changes (installing one font writes several files) becomes
 /// a single event after a short quiet period. When the scan folders change, the watches are rebuilt
@@ -339,6 +359,7 @@ pub fn run() {
             let (restart_tx, restart_rx) = mpsc::channel();
             app.manage(WatchRestart(restart_tx));
             watch_library(app.handle().clone(), restart_rx);
+            watch_session(app.handle().clone());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

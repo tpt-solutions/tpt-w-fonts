@@ -86,6 +86,7 @@ if (root) {
 
   // Fonts added or removed outside the app refresh the library automatically.
   void listen("library-changed", () => void library.refresh());
+  void listen("session-changed", () => void library.refresh());
 
   const dropStatus = statusLine();
   const header = el("header");
