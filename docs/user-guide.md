@@ -63,7 +63,7 @@ Exit status is `0` on success, `1` for an error such as a font that is not found
 - **"The tray process is not running":** start it from the app with **Start tray**, or run `tpt-fonts-tray` from the install folder.
 - **A font shows as "cannot load this file":** the file may be damaged or not a font. The library reports how many files could not be read; the reasons are not logged yet.
 - **Some fonts are missing from the library:** they may be in a folder the app does not scan. The app scans your user font folder and the system font folder.
-- **Anything else:** the log is at `%LOCALAPPDATA%\tpt-fonts\logs\tpt-fonts.log` on Windows, or `$XDG_STATE_HOME/tpt-fonts/logs/tpt-fonts.log` on Linux. It contains the errors only; nothing is sent anywhere. The file rotates at 1 MB, and the previous copy is kept as `tpt-fonts.log.1`.
+- **Anything else:** the log is at `%LOCALAPPDATA%\tpt-fonts\logs\tpt-fonts.log` on Windows, or `$XDG_STATE_HOME/tpt-fonts/logs/tpt-fonts.log` on Linux. It records errors and routine tray events; nothing is sent anywhere. The file rotates at 1 MB, and the previous copy is kept as `tpt-fonts.log.1`.
 
 ## Limits in this version
 
