@@ -9,6 +9,8 @@
   --accent: #1f3a5c;
   --error: #9b1c1c;
   --border: #d9d9d4;
+  /* Form controls need a 3:1 boundary against their background (WCAG 1.4.11). */
+  --control-border: #8a8a84;
   color-scheme: light dark;
 }
 
@@ -21,6 +23,7 @@
     --accent: #8fb4e3;
     --error: #f2a5a5;
     --border: #3a3b39;
+    --control-border: #7d7e79;
   }
 }
 
@@ -32,6 +35,7 @@
   --accent: #8fb4e3;
   --error: #f2a5a5;
   --border: #3a3b39;
+  --control-border: #7d7e79;
 }
 
 body {
@@ -66,7 +70,7 @@ button {
   font: inherit;
   color: inherit;
   background: var(--panel);
-  border: 1px solid var(--border);
+  border: 1px solid var(--control-border);
   border-radius: 4px;
   padding: 6px 10px;
 }
@@ -104,6 +108,14 @@ select:disabled {
   border-radius: 6px;
   overflow-wrap: anywhere;
   transition: background-color 150ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
 }
 
 .specimen.light,
@@ -288,7 +300,12 @@ main [hidden] {
 .library tbody tr:focus-visible,
 .library tbody tr.selected {
   background: color-mix(in srgb, var(--accent) 12%, transparent);
-  outline: none;
+}
+
+/* The tint alone is too faint to show keyboard focus, so the row also gets an outline. */
+.library tbody tr:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
 }
 
 .library td.path {

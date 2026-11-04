@@ -24,6 +24,8 @@ export function button(label: string, onClick: () => void, className = ""): HTML
 /** A small inline status line that can show an error or hide itself. */
 export function statusLine(): { element: HTMLParagraphElement; show: (text: string) => void; clear: () => void } {
   const element = el("p", "error");
+  // Assistive technology announces the message when it appears.
+  element.setAttribute("role", "alert");
   element.hidden = true;
   return {
     element,

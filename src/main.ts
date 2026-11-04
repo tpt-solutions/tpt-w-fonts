@@ -19,6 +19,7 @@ const root = document.querySelector<HTMLDivElement>("#app");
 if (root) {
   const preview = createPreviewPanel();
   const sessionSummary = el("span", "meta");
+  sessionSummary.setAttribute("aria-live", "polite");
   const library = createLibraryPanel(
     (path) => {
       showTab("preview");
@@ -84,7 +85,8 @@ if (root) {
     tabBar.append(item);
   }
 
-  // Fonts added or removed outside the app refresh the library automatically.
+  // Fonts added or removed outside the app, and session changes made from the CLI or the tray,
+  // refresh the library automatically.
   void listen("library-changed", () => void library.refresh());
   void listen("session-changed", () => void library.refresh());
 
