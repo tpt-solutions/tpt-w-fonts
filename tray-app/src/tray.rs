@@ -5,8 +5,7 @@
 
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::mpsc::{self, Sender};
-use std::time::Duration;
+use std::sync::mpsc::Sender;
 
 use tpt_fonts_core::{
     Request, Response, SessionManager, autostart_enabled, handle_request, set_autostart,
@@ -28,6 +27,7 @@ pub enum UserEvent {
     /// A menu item was chosen.
     Menu(MenuId),
     /// Windows is ending the session. Deactivate everything, then reply.
+    #[cfg(windows)]
     SessionEnd(Sender<()>),
 }
 
@@ -63,13 +63,13 @@ pub fn run(
     {
         let session_proxy = proxy.clone();
         crate::logoff::watch(move || {
-            let (reply_tx, reply_rx) = mpsc::channel();
+            let (reply_tx, reply_rx) = std::sync::mpsc::channel();
             if session_proxy
                 .send_event(UserEvent::SessionEnd(reply_tx))
                 .is_ok()
             {
                 // Bounded wait: Windows gives a session-ending process only a few seconds.
-                let _ = reply_rx.recv_timeout(Duration::from_secs(5));
+                let _ = reply_rx.recv_timeout(std::time::Duration::from_secs(5));
             }
         });
     }
@@ -197,6 +197,7 @@ impl ApplicationHandler<UserEvent> for App {
                 self.refresh_menu();
             }
             UserEvent::Menu(id) => self.on_menu(event_loop, id),
+            #[cfg(windows)]
             UserEvent::SessionEnd(reply) => {
                 if let Err(err) = self.manager.deactivate_all() {
                     report!("tpt-fonts-tray: session end cleanup: {err}");
