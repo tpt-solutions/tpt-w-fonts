@@ -51,6 +51,10 @@
       "binaries/tpt-fonts-tray",
       "binaries/tpt-fonts"
     ],
+    "resources": {
+      "../LICENSE-MIT": "LICENSE-MIT",
+      "../LICENSE-APACHE": "LICENSE-APACHE"
+    },
     "windows": {
       "nsis": {
         "installMode": "currentUser"
