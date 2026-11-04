@@ -108,9 +108,7 @@ fn corrupted_fonts_never_panic_the_parser() {
             }
 
             let outcome = catch_unwind(AssertUnwindSafe(|| {
-                let Some(format) = detect_format(&data) else {
-                    return None;
-                };
+                let format = detect_format(&data)?;
                 Some(parse_faces(&data, format).is_ok())
             }));
             match outcome {
