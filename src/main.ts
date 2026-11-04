@@ -40,7 +40,7 @@ if (root) {
   });
   deactivateAll.disabled = true;
   const duplicates = createDuplicatesPanel();
-  const settings = createSettingsPanel();
+  const settings = createSettingsPanel(() => void library.refresh());
 
   const panels: Record<Tab, HTMLElement> = {
     library: library.element,

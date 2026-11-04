@@ -6,16 +6,17 @@
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::mpsc::{self, Receiver, RecvTimeoutError, Sender};
 
 use serde::Serialize;
 use std::time::Duration;
 
-use tauri::{AppHandle, Emitter, Manager};
+use tauri::{AppHandle, Emitter, Manager, State};
 use tpt_fonts_core::{
     ActivationSource, DuplicateGroup, FontBackend, FontError, FontRow, FontSource, FontWatcher,
-    PreviewState, Request, Resolution, Response, autostart_enabled, build_rows, default_scan_roots,
-    find_duplicates, load_default_catalog, platform_backend, read_font_file, resolve_exact_group,
-    send_request, set_autostart,
+    PreviewState, Request, Resolution, Response, add_scan_dir, autostart_enabled, build_rows,
+    find_duplicates, load_default_catalog, platform_backend, read_font_file, remove_scan_dir,
+    resolve_exact_group, scan_dir_settings, scan_roots, send_request, set_autostart,
 };
 
 /// The library as the frontend shows it.
@@ -240,23 +241,92 @@ fn preview_apply_saved(mut state: PreviewState, index: usize) -> Result<PreviewS
     Ok(state)
 }
 
+/// Sends a signal to the library watcher when the set of scan folders changes.
+struct WatchRestart(Sender<()>);
+
+#[derive(Serialize)]
+struct ScanDirsView {
+    /// The folders the OS provides. They are shown for reference and cannot be removed.
+    defaults: Vec<String>,
+    extra: Vec<ExtraScanDir>,
+}
+
+#[derive(Serialize)]
+struct ExtraScanDir {
+    path: String,
+    /// False when the folder has gone missing since it was added.
+    exists: bool,
+}
+
+#[tauri::command]
+fn scan_dirs_get() -> Result<ScanDirsView, String> {
+    let settings = scan_dir_settings().map_err(message)?;
+    Ok(ScanDirsView {
+        defaults: settings
+            .defaults
+            .iter()
+            .map(|p| p.display().to_string())
+            .collect(),
+        extra: settings
+            .extra
+            .iter()
+            .map(|p| ExtraScanDir {
+                path: p.display().to_string(),
+                exists: p.is_dir(),
+            })
+            .collect(),
+    })
+}
+
+#[tauri::command]
+fn scan_dirs_add(path: String, restart: State<WatchRestart>) -> Result<(), String> {
+    add_scan_dir(Path::new(&path)).map_err(message)?;
+    // The watcher may be dead if the folder list was empty at startup; the signal is best effort.
+    let _ = restart.0.send(());
+    Ok(())
+}
+
+#[tauri::command]
+fn scan_dirs_remove(path: String, restart: State<WatchRestart>) -> Result<(), String> {
+    remove_scan_dir(Path::new(&path)).map_err(message)?;
+    let _ = restart.0.send(());
+    Ok(())
+}
+
 /// Watches the font folders and tells the frontend when they change, so the library stays current
 /// without a manual rescan. A burst of changes (installing one font writes several files) becomes
-/// a single event after a short quiet period.
-fn watch_library(app: AppHandle) {
+/// a single event after a short quiet period. When the scan folders change, the watches are rebuilt
+/// for the new set.
+fn watch_library(app: AppHandle, restart: Receiver<()>) {
     std::thread::spawn(move || {
-        let roots: Vec<PathBuf> = default_scan_roots().into_iter().map(|r| r.path).collect();
-        let refs: Vec<&Path> = roots.iter().map(PathBuf::as_path).collect();
-        let Ok((watcher, changes)) = FontWatcher::start(&refs) else {
-            return;
-        };
-        // The watcher stops when dropped, so it lives as long as this thread does.
-        let _watcher = watcher;
-        while changes.recv().is_ok() {
-            // Keep draining until the folders have been quiet for a moment.
-            while changes.recv_timeout(Duration::from_millis(400)).is_ok() {}
-            if app.emit("library-changed", ()).is_err() {
-                break;
+        loop {
+            let roots: Vec<PathBuf> = scan_roots().into_iter().map(|r| r.path).collect();
+            let refs: Vec<&Path> = roots.iter().map(PathBuf::as_path).collect();
+            let Ok((watcher, changes)) = FontWatcher::start(&refs) else {
+                // Nothing to watch with this folder list. Wait for it to change before retrying.
+                if restart.recv().is_err() {
+                    return;
+                }
+                continue;
+            };
+            // The watcher stops when dropped, which happens at the end of each pass.
+            let _watcher = watcher;
+            loop {
+                match changes.recv_timeout(Duration::from_millis(250)) {
+                    Ok(_) => {
+                        // Keep draining until the folders have been quiet for a moment.
+                        while changes.recv_timeout(Duration::from_millis(400)).is_ok() {}
+                        if app.emit("library-changed", ()).is_err() {
+                            return;
+                        }
+                    }
+                    Err(RecvTimeoutError::Timeout) => {}
+                    Err(RecvTimeoutError::Disconnected) => return,
+                }
+                if restart.try_recv().is_ok() {
+                    while restart.try_recv().is_ok() {}
+                    break;
+                }
             }
         }
     });
@@ -266,7 +336,9 @@ fn watch_library(app: AppHandle) {
 pub fn run() {
     tauri::Builder::default()
         .setup(|app| {
-            watch_library(app.handle().clone());
+            let (restart_tx, restart_rx) = mpsc::channel();
+            app.manage(WatchRestart(restart_tx));
+            watch_library(app.handle().clone(), restart_rx);
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -282,6 +354,9 @@ pub fn run() {
             autostart_set,
             tray_start,
             open_tools_page,
+            scan_dirs_get,
+            scan_dirs_add,
+            scan_dirs_remove,
             open_preview,
             preview_set_axis,
             preview_reset_axes,

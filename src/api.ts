@@ -86,6 +86,12 @@ export interface Resolution {
   skipped_system: string[];
 }
 
+export interface ScanDirsView {
+  /** Folders the OS provides. They are fixed and cannot be removed. */
+  defaults: string[];
+  extra: { path: string; exists: boolean }[];
+}
+
 export const api = {
   libraryList: () => invoke<LibraryView>("library_list"),
   sessionActivate: (path: string) => invoke<void>("session_activate", { path }),
@@ -100,6 +106,9 @@ export const api = {
   autostartSet: (enabled: boolean) => invoke<void>("autostart_set", { enabled }),
   trayStart: () => invoke<void>("tray_start"),
   openToolsPage: () => invoke<void>("open_tools_page"),
+  scanDirsGet: () => invoke<ScanDirsView>("scan_dirs_get"),
+  scanDirsAdd: (path: string) => invoke<void>("scan_dirs_add", { path }),
+  scanDirsRemove: (path: string) => invoke<void>("scan_dirs_remove", { path }),
 
   openPreview: (path: string, faceIndex: number) =>
     invoke<PreviewState>("open_preview", { path, faceIndex }),

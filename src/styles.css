@@ -245,6 +245,25 @@ main [hidden] {
   margin: 8px 0;
 }
 
+.scan-folders {
+  margin: 16px 0 8px;
+}
+
+.scan-folders input {
+  flex: 1;
+  min-width: 0;
+}
+
+.scan-dirs {
+  margin: 8px 0;
+  padding-left: 20px;
+  overflow-wrap: anywhere;
+}
+
+.scan-dirs li {
+  margin: 4px 0;
+}
+
 /* ---- Library table -------------------------------------------------------- */
 
 .library {
